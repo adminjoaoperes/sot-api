@@ -67,61 +67,52 @@ app.get("/api/taxon", async (req, res) => {
 
 let especiesChecklistBank = [];
 
+async function buscarDescendentesChecklistBank(id) {
+
+    const url =
+        `https://api.checklistbank.org/dataset/3LR/tree/${id}/children`;
+
+    const resposta = await fetch(url);
+    const dados = await resposta.json();
+
+    if (!dados.result) {
+        return;
+    }
+
+    for (const filho of dados.result) {
+
+        // Se encontrou uma espécie, adiciona à lista
+        if (filho.rank === "species") {
+
+            especiesChecklistBank.push({
+
+                id: filho.id,
+                nome: filho.name,
+                autoria: filho.authorship || null,
+                status: filho.status || null
+
+            });
+
+            continue;
+        }
+
+        // Se ainda não chegou às espécies,
+        // continua descendo pela árvore
+        if (filho.childCount > 0) {
+
+            await buscarDescendentesChecklistBank(filho.id);
+
+        }
+
+    }
+
+}
+
 if (uso.rank === "family") {
 
     try {
 
-        const urlGeneros =
-            `https://api.checklistbank.org/dataset/3LR/tree/${uso.id}/children`;
-
-        const respostaGeneros =
-            await fetch(urlGeneros);
-
-        const dadosGeneros =
-            await respostaGeneros.json();
-
-
-        if (dadosGeneros.result) {
-
-            for (const genero of dadosGeneros.result) {
-
-                const urlEspecies =
-                    `https://api.checklistbank.org/dataset/3LR/tree/${genero.id}/children`;
-
-                const respostaEspecies =
-                    await fetch(urlEspecies);
-
-                const dadosEspecies =
-                    await respostaEspecies.json();
-
-
-                if (dadosEspecies.result) {
-
-                    dadosEspecies.result.forEach((especie) => {
-
-                        if (especie.rank === "species") {
-
-                            especiesChecklistBank.push({
-
-                                id: especie.id,
-
-                                nome: especie.name,
-
-                                autoria: especie.authorship || null,
-
-                                status: especie.status || null
-
-                            });
-
-                        }
-
-                    });
-
-                }
-
-            }
-
-        }
+        await buscarDescendentesChecklistBank(uso.id);
 
     } catch (erro) {
 
@@ -133,34 +124,6 @@ if (uso.rank === "family") {
     }
 
 }
-
-            if (uso.classification) {
-
-                uso.classification.forEach((taxon) => {
-
-                    if (taxon.rank === "kingdom") {
-                        classificacao.reino = taxon.name;
-                    }
-
-                    if (taxon.rank === "phylum") {
-                        classificacao.filo = taxon.name;
-                    }
-
-                    if (taxon.rank === "class") {
-                        classificacao.classe = taxon.name;
-                    }
-
-                    if (taxon.rank === "order") {
-                        classificacao.ordem = taxon.name;
-                    }
-
-                    if (taxon.rank === "family") {
-                        classificacao.familia = taxon.name;
-                    }
-
-                });
-
-            }
 
             checklistbank = {
 
