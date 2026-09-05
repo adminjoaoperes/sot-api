@@ -375,7 +375,7 @@ registros.forEach((registro) => {
 // =====================================================
 
 let nomeEspecie = null;
-
+let nameOnlyMatch = null;
 
 // -----------------------------------------------------
 // 1. REGISTROS "VALID AS"
@@ -400,7 +400,7 @@ if (validAsMatch) {
 
 if (!nomeEspecie) {
 
-    const nameOnlyMatch =
+    nameOnlyMatch =
         texto.match(
             /Name only as\s+([A-Z][a-z-]+\s+[a-z-]+)/
         );
