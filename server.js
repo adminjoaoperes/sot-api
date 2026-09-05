@@ -370,16 +370,35 @@ registros.forEach((registro) => {
             : null;
 
 
-    // =====================================================
-    // NOME DA ESPÉCIE
-    // =====================================================
+// =====================================================
+// NOME DA ESPÉCIE
+// =====================================================
 
-    let nomeEspecie = null;
+let nomeEspecie = null;
 
 
-    // -----------------------------------------------------
-    // 1. Se existir "Name only as"
-    // -----------------------------------------------------
+// -----------------------------------------------------
+// 1. REGISTROS "VALID AS"
+// -----------------------------------------------------
+
+const validAsMatch =
+    texto.match(
+        /Valid as\s+([A-Z][a-z-]+\s+[a-z-]+)/
+    );
+
+if (validAsMatch) {
+
+    nomeEspecie =
+        validAsMatch[1];
+
+}
+
+
+// -----------------------------------------------------
+// 2. REGISTROS "NAME ONLY AS"
+// -----------------------------------------------------
+
+if (!nomeEspecie) {
 
     const nameOnlyMatch =
         texto.match(
@@ -393,48 +412,29 @@ registros.forEach((registro) => {
 
     }
 
-
-    // -----------------------------------------------------
-    // 2. Se for sinônimo, procura o nome original
-    // -----------------------------------------------------
-
-    if (!nomeEspecie && status) {
-
-        const synonymNameMatch =
-            texto.match(
-                /(?:\bIn the synonymy of\s+|\bSynonym of\s+)([A-Z][a-z-]+\s+[a-z-]+)/
-            );
-
-        if (synonymNameMatch) {
-
-            // Não usamos o nome válido como nome do registro.
-            // O nome original será procurado abaixo.
-        }
-
-    }
+}
 
 
-    // -----------------------------------------------------
-    // 3. Nome científico normal
-    // -----------------------------------------------------
+// -----------------------------------------------------
+// 3. NOME CIENTÍFICO NO INÍCIO DO REGISTRO
+// -----------------------------------------------------
 
-    if (!nomeEspecie) {
+if (!nomeEspecie) {
 
-        const nomeMatch =
-            texto.match(
-                /^([A-Z][a-z-]+\s+[a-z-]+)/
-            );
+    const nomeMatch =
+        texto.match(
+            /^([A-Z][a-z-]+\s+[a-z-]+)/
+        );
 
-        if (nomeMatch) {
+    if (nomeMatch) {
 
-            nomeEspecie =
-                nomeMatch[1];
-
-        }
+        nomeEspecie =
+            nomeMatch[1];
 
     }
 
-
+}
+  
     // =====================================================
     // NOME DO SINÔNIMO
     // =====================================================
