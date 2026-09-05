@@ -291,181 +291,205 @@ try {
 
         if (registros) {
 
-            registros.forEach((registro) => {
+// Processa cada registro
+registros.forEach((registro) => {
 
-                // ID
-                const idMatch =
-                    registro.match(
-                        /spid="(\d+)"/
-                    );
+    // ID
+    const idMatch =
+        registro.match(/spid="(\d+)"/);
 
-                const id =
-                    idMatch
-                        ? idMatch[1]
-                        : null;
+    const id =
+        idMatch
+            ? idMatch[1]
+            : null;
 
 
-                // Converte HTML para texto
-                const texto = registro
+    // Converte HTML para texto
+    const texto =
+        registro
+            .replace(/<[^>]*>/g, " ")
+            .replace(/&bull;/g, "•")
+            .replace(/&amp;/g, "&")
+            .replace(/&#233;/g, "é")
+            .replace(/&#234;/g, "ê")
+            .replace(/&#225;/g, "á")
+            .replace(/&#243;/g, "ó")
+            .replace(/&#231;/g, "ç")
+            .replace(/&#269;/g, "č")
+            .replace(/&#263;/g, "ć")
+            .replace(/&#268;/g, "Č")
+            .replace(/&#252;/g, "ü")
+            .replace(/&#241;/g, "ñ")
+            .replace(/&#355;/g, "ţ")
+            .replace(/\s+/g, " ")
+            .trim();
 
-                    .replace(
-                        /<[^>]*>/g,
-                        " "
-                    )
 
-                    .replace(
-                        /&bull;/g,
-                        "•"
-                    )
+    // =====================================================
+    // STATUS
+    // =====================================================
 
-                    .replace(
-                        /&amp;/g,
-                        "&"
-                    )
-
-                    .replace(
-                        /&#233;/g,
-                        "é"
-                    )
-
-                    .replace(
-                        /&#234;/g,
-                        "ê"
-                    )
-
-                    .replace(
-                        /&#225;/g,
-                        "á"
-                    )
-
-                    .replace(
-                        /&#243;/g,
-                        "ó"
-                    )
-
-                    .replace(
-                        /&#231;/g,
-                        "ç"
-                    )
-
-                    .replace(
-                        /&#269;/g,
-                        "č"
-                    )
-
-                    .replace(
-                        /&#263;/g,
-                        "ć"
-                    )
-
-                    .replace(
-                        /&#268;/g,
-                        "Č"
-                    )
-
-                    .replace(
-                        /&#252;/g,
-                        "ü"
-                    )
-
-                    .replace(
-                        /&#241;/g,
-                        "ñ"
-                    )
-
-                    .replace(
-                        /&#355;/g,
-                        "ţ"
-                    )
-
-                    .replace(
-                        /\s+/g,
-                        " "
-                    )
-
-                    .trim();
-
-// Nome da espécie
-let nomeEspecie = null;
-
-// Procura primeiro por "Valid as"
-const validAsMatch =
-    texto.match(
-        /Valid as\s+([A-Z][a-z-]+\s+[a-z-]+)/
-    );
-
-if (validAsMatch) {
-
-    nomeEspecie = validAsMatch[1];
-
-} else {
-
-    // Procura pelo nome científico no início do registro
-    const nomeMatch =
+    const statusMatch =
         texto.match(
-            /^([A-Z][a-z-]+\s+[a-z-]+)/
+            /Current status:\s*(.*?)(?:\. [A-Z][A-Za-z]+idae\.|\. Gobiesocidae\.)/
         );
 
-    if (nomeMatch) {
+    const status =
+        statusMatch
+            ? statusMatch[1].trim()
+            : null;
 
-        nomeEspecie = nomeMatch[1];
+
+    // =====================================================
+    // FAMÍLIA
+    // =====================================================
+
+    const familiaMatch =
+        texto.match(
+            /Current status:.*?\.\s+([A-Z][A-Za-z]+idae)\.?/
+        );
+
+    const familia =
+        familiaMatch
+            ? familiaMatch[1]
+            : null;
+
+
+    // =====================================================
+    // HABITAT
+    // =====================================================
+
+    const habitatMatch =
+        texto.match(
+            /Habitat:\s*(.*?)(?:\.|$)/
+        );
+
+    const habitat =
+        habitatMatch
+            ? habitatMatch[1]
+            : null;
+
+
+    // =====================================================
+    // NOME DA ESPÉCIE
+    // =====================================================
+
+    let nomeEspecie = null;
+
+
+    // -----------------------------------------------------
+    // 1. Se existir "Name only as"
+    // -----------------------------------------------------
+
+    const nameOnlyMatch =
+        texto.match(
+            /Name only as\s+([A-Z][a-z-]+\s+[a-z-]+)/
+        );
+
+    if (nameOnlyMatch) {
+
+        nomeEspecie =
+            nameOnlyMatch[1];
 
     }
 
-}
 
-                // Status atual
-                const statusMatch =
-                    texto.match(
-                        /Current status:\s*(.*?)(?:\.\s+[A-Z][A-Za-z]+idae\.)/
-                    );
+    // -----------------------------------------------------
+    // 2. Se for sinônimo, procura o nome original
+    // -----------------------------------------------------
 
-                const status =
-                    statusMatch
-                        ? statusMatch[1].trim()
-                        : null;
+    if (!nomeEspecie && status) {
 
+        const synonymNameMatch =
+            texto.match(
+                /(?:\bIn the synonymy of\s+|\bSynonym of\s+)([A-Z][a-z-]+\s+[a-z-]+)/
+            );
 
-                // Família
-                const familiaMatch =
-                    texto.match(
-                        /Current status:.*?\.\s+([A-Z][A-Za-z]+idae)\./
-                    );
+        if (synonymNameMatch) {
 
-                const familia =
-                    familiaMatch
-                        ? familiaMatch[1]
-                        : null;
+            // Não usamos o nome válido como nome do registro.
+            // O nome original será procurado abaixo.
+        }
+
+    }
 
 
-                // Habitat
-                const habitatMatch =
-                    texto.match(
-                        /Habitat:\s*(.*?)(?:\.|$)/
-                    );
+    // -----------------------------------------------------
+    // 3. Nome científico normal
+    // -----------------------------------------------------
 
-                const habitat =
-                    habitatMatch
-                        ? habitatMatch[1]
-                        : null;
+    if (!nomeEspecie) {
+
+        const nomeMatch =
+            texto.match(
+                /^([A-Z][a-z-]+\s+[a-z-]+)/
+            );
+
+        if (nomeMatch) {
+
+            nomeEspecie =
+                nomeMatch[1];
+
+        }
+
+    }
 
 
-                especies.push({
+    // =====================================================
+    // NOME DO SINÔNIMO
+    // =====================================================
 
-                    id,
+    let sinonimoDe = null;
 
-                    nome:
-                        nomeEspecie,
+    if (status && status.startsWith("Synonym of")) {
 
-                    status,
+        const sinonimoMatch =
+            status.match(
+                /Synonym of\s+([A-Z][a-z-]+\s+[a-z-]+)/
+            );
 
-                    familia,
+        if (sinonimoMatch) {
 
-                    habitat
+            sinonimoDe =
+                sinonimoMatch[1];
 
-                });
+        }
 
-            });
+
+        // Se o registro possuir "Name only as",
+        // esse é o nome científico original.
+        if (nameOnlyMatch) {
+
+            nomeEspecie =
+                nameOnlyMatch[1];
+
+        }
+
+    }
+
+
+    // =====================================================
+    // REGISTRO
+    // =====================================================
+
+    especies.push({
+
+        id,
+
+        nome:
+            nomeEspecie,
+
+        status,
+
+        familia,
+
+        habitat,
+
+        sinonimoDe
+
+    });
+
+});
 
         }
 
