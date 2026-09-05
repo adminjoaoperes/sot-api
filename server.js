@@ -65,6 +65,75 @@ app.get("/api/taxon", async (req, res) => {
                 classificacao.familia = uso.name;
             }
 
+let especiesChecklistBank = [];
+
+if (uso.rank === "family") {
+
+    try {
+
+        const urlGeneros =
+            `https://api.checklistbank.org/dataset/3LR/tree/${uso.id}/children`;
+
+        const respostaGeneros =
+            await fetch(urlGeneros);
+
+        const dadosGeneros =
+            await respostaGeneros.json();
+
+
+        if (dadosGeneros.result) {
+
+            for (const genero of dadosGeneros.result) {
+
+                const urlEspecies =
+                    `https://api.checklistbank.org/dataset/3LR/tree/${genero.id}/children`;
+
+                const respostaEspecies =
+                    await fetch(urlEspecies);
+
+                const dadosEspecies =
+                    await respostaEspecies.json();
+
+
+                if (dadosEspecies.result) {
+
+                    dadosEspecies.result.forEach((especie) => {
+
+                        if (especie.rank === "species") {
+
+                            especiesChecklistBank.push({
+
+                                id: especie.id,
+
+                                nome: especie.name,
+
+                                autoria: especie.authorship || null,
+
+                                status: especie.status || null
+
+                            });
+
+                        }
+
+                    });
+
+                }
+
+            }
+
+        }
+
+    } catch (erro) {
+
+        console.log(
+            "Erro ao buscar espécies do ChecklistBank:",
+            erro.message
+        );
+
+    }
+
+}
+
             if (uso.classification) {
 
                 uso.classification.forEach((taxon) => {
@@ -106,6 +175,8 @@ app.get("/api/taxon", async (req, res) => {
                 rank: uso.rank,
 
                 status: uso.status,
+
+	        especies: especiesChecklistBank,
 
                 reino: classificacao.reino || null,
 

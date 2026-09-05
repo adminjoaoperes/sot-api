@@ -1206,6 +1206,110 @@ function cardChecklistBank(dados) {
 
     }
 
+// -----------------------------------------------
+// FAMÍLIA
+// -----------------------------------------------
+
+if (dados.rank === "family") {
+
+    const especies =
+        dados.especies || [];
+
+    let listaEspecies = "";
+
+    if (especies.length > 0) {
+
+        listaEspecies = `
+
+            <div class="fonte-info">
+
+                <span class="fonte-label">
+                    Espécies:
+                </span>
+
+                <ul
+                    style="
+                        margin-top: 8px;
+                        padding-left: 20px;
+                    "
+                >
+
+                    ${especies.map((especie) => `
+
+                        <li
+                            style="
+                                margin-bottom: 6px;
+                            "
+                        >
+                            <i>
+                                ${especie.nome}
+                                ${especie.autoria || ""}
+                            </i>
+                        </li>
+
+                    `).join("")}
+
+                </ul>
+
+            </div>
+
+        `;
+
+    } else {
+
+        listaEspecies = `
+
+            <div class="fonte-info">
+
+                Nenhuma espécie encontrada.
+
+            </div>
+
+        `;
+
+    }
+
+
+    return `
+
+        <div class="fonte">
+
+            <h3>ChecklistBank</h3>
+
+            <span class="fonte-status status-ok">
+                ✓ Família encontrada
+            </span>
+
+
+            <div class="fonte-info">
+
+                <span class="fonte-label">
+                    Família:
+                </span>
+
+                <i>${dados.nome}</i>
+
+            </div>
+
+
+            <div class="fonte-info">
+
+                <span class="fonte-label">
+                    Espécies encontradas:
+                </span>
+
+                ${especies.length}
+
+            </div>
+
+
+            ${listaEspecies}
+
+        </div>
+
+    `;
+
+}
 
     let classeStatus =
         dados.status === "accepted"
