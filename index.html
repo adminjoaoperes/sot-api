@@ -812,6 +812,15 @@ async function consultarTaxon() {
 
     }
 
+// =====================================================
+// ATUALIZA A URL
+// =====================================================
+
+history.pushState(
+    {},
+    "",
+    "/taxon/" + encodeURIComponent(nome)
+);
 
     carregando.style.display = "block";
 
@@ -1904,6 +1913,27 @@ document
 
     });
 
+// =====================================================
+// CARREGA TÁXON A PARTIR DA URL
+// =====================================================
+
+const partesURL =
+    window.location.pathname.split("/");
+
+if (
+    partesURL[1] === "taxon" &&
+    partesURL[2]
+) {
+
+    const nomeURL =
+        decodeURIComponent(partesURL.slice(2).join("/"));
+
+    document.getElementById("campoBusca").value =
+        nomeURL;
+
+    consultarTaxon();
+
+}
 
 </script>
 

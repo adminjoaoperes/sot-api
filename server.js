@@ -14,9 +14,12 @@ const PORT = process.env.PORT || 3000;
 // =====================================================
 
 app.get("/", (req, res) => {
-    res.send("SOT API funcionando!");
+    res.sendFile(__dirname + "/index.html");
 });
 
+app.get("/taxon/:nome", (req, res) => {
+    res.sendFile(__dirname + "/index.html");
+});
 
 // =====================================================
 // CONSULTA TAXONÔMICA
