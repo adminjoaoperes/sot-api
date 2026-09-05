@@ -385,18 +385,34 @@ try {
 
                     .trim();
 
+// Nome da espécie
+let nomeEspecie = null;
 
-                // Nome da espécie
-                const nomeMatch =
-                    texto.match(
-                        /^([A-Z][a-z]+ [a-z-]+)/
-                    );
+// Procura primeiro por "Valid as"
+const validAsMatch =
+    texto.match(
+        /Valid as\s+([A-Z][a-z-]+\s+[a-z-]+)/
+    );
 
-                const nomeEspecie =
-                    nomeMatch
-                        ? nomeMatch[1]
-                        : null;
+if (validAsMatch) {
 
+    nomeEspecie = validAsMatch[1];
+
+} else {
+
+    // Procura pelo nome científico no início do registro
+    const nomeMatch =
+        texto.match(
+            /^([A-Z][a-z-]+\s+[a-z-]+)/
+        );
+
+    if (nomeMatch) {
+
+        nomeEspecie = nomeMatch[1];
+
+    }
+
+}
 
                 // Status atual
                 const statusMatch =
