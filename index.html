@@ -1407,6 +1407,7 @@ function habitatWorms(dados) {
 
 function cardEschmeyer(dados) {
 
+    console.log("ESCHMEYER RECEBEU:", dados);
 
     if (!dados || !dados.encontrado) {
 
@@ -1426,6 +1427,155 @@ function cardEschmeyer(dados) {
                     foi encontrado no catálogo de peixes.
 
                 </div>
+
+            </div>
+
+        `;
+
+    }
+
+
+    // -----------------------------------------------
+    // FAMÍLIA
+    // -----------------------------------------------
+
+    if (dados.tipo === "familia") {
+
+
+        // Cria uma lista somente com espécies válidas
+        // encontradas nos registros do Eschmeyer
+
+        const especies = [];
+
+
+        if (dados.especies) {
+
+            dados.especies.forEach((especie) => {
+
+
+                if (!especie.status)
+                    return;
+
+
+                if (
+                    especie.status.startsWith("Valid as ")
+                ) {
+
+                    const nomeEspecie =
+                        especie.status
+                            .replace(
+                                "Valid as ",
+                                ""
+                            )
+                            .trim();
+
+
+                    if (
+                        nomeEspecie &&
+                        !especies.includes(nomeEspecie)
+                    ) {
+
+                        especies.push(nomeEspecie);
+
+                    }
+
+                }
+
+            });
+
+        }
+
+
+        let listaEspecies = "";
+
+
+        if (especies.length > 0) {
+
+            listaEspecies = `
+
+                <div class="fonte-info">
+
+                    <span class="fonte-label">
+                        Espécies:
+                    </span>
+
+                    <ul
+                        style="
+                            margin-top: 8px;
+                            padding-left: 20px;
+                        "
+                    >
+
+                        ${especies.map((especie) => `
+
+                            <li
+                                style="
+                                    margin-bottom: 6px;
+                                "
+                            >
+                                <i>${especie}</i>
+                            </li>
+
+                        `).join("")}
+
+                    </ul>
+
+                </div>
+
+            `;
+
+        } else {
+
+            listaEspecies = `
+
+                <div class="fonte-info">
+
+                    Nenhuma espécie válida
+                    foi identificada nos registros.
+
+                </div>
+
+            `;
+
+        }
+
+
+        return `
+
+            <div class="fonte">
+
+                <h3>
+                    Eschmeyer's Catalog of Fishes
+                </h3>
+
+                <span class="fonte-status status-ok">
+                    ✓ Família encontrada
+                </span>
+
+
+                <div class="fonte-info">
+
+                    <span class="fonte-label">
+                        Família:
+                    </span>
+
+                    <i>${dados.nome}</i>
+
+                </div>
+
+
+                <div class="fonte-info">
+
+                    <span class="fonte-label">
+                        Espécies encontradas:
+                    </span>
+
+                    ${especies.length}
+
+                </div>
+
+
+                ${listaEspecies}
 
             </div>
 
@@ -1569,7 +1719,6 @@ function cardEschmeyer(dados) {
     `;
 
 }
-
 
 // =====================================================
 // WIKIPEDIA

@@ -224,292 +224,501 @@ app.get("/api/taxon", async (req, res) => {
         // ESCHMEYER
         // =====================================================
 
-        let eschmeyer = null;
+       // =====================================================
+// ESCHMEYER
+// =====================================================
 
-        try {
+let eschmeyer = null;
 
-            // Divide o nome em gênero e espécie
-            const partes =
-                nome.trim().split(/\s+/);
+try {
 
-            const genero = partes[0];
-            const especie = partes[1];
+    // =====================================================
+    // CONSULTA DE FAMÍLIA
+    // =====================================================
 
-            // O Eschmeyer será consultado apenas
-            // quando houver gênero + espécie
-            if (genero && especie) {
+    if (uso && uso.rank === "family") {
 
-                const urlEschmeyer =
-                    `https://researcharchive.calacademy.org/research/ichthyology/catalog/fishcatget.asp?tbl=species&genus=${encodeURIComponent(genero)}&species=${encodeURIComponent(especie)}`;
+        const urlEschmeyer =
+            `https://researcharchive.calacademy.org/research/ichthyology/catalog/fishcatget.asp?tbl=species&family=${encodeURIComponent(nome)}`;
 
-                const respostaEschmeyer =
-                    await fetch(urlEschmeyer);
+        const respostaEschmeyer =
+            await fetch(urlEschmeyer);
 
-                const html =
-                    await respostaEschmeyer.text();
+        const html =
+            await respostaEschmeyer.text();
 
-                // Encontra todos os registros
-                const registros =
-                    html.match(
-                        /<p class="result"[\s\S]*?<\/p>/g
+        // Encontra todos os registros de espécies
+        const registros =
+            html.match(
+                /<p class="result"[\s\S]*?<\/p>/g
+            );
+
+        const especies = [];
+
+        if (registros) {
+
+            registros.forEach((registro) => {
+
+                // ID
+                const idMatch =
+                    registro.match(
+                        /spid="(\d+)"/
                     );
 
-                if (registros) {
-
-                    const resultados = [];
-
-                    registros.forEach((registro) => {
-
-                        // ID
-                        const idMatch =
-                            registro.match(
-                                /spid="(\d+)"/
-                            );
-
-                        const id =
-                            idMatch
-                                ? idMatch[1]
-                                : null;
+                const id =
+                    idMatch
+                        ? idMatch[1]
+                        : null;
 
 
-                        // Converte HTML para texto
-                        const texto = registro
+                // Converte HTML para texto
+                const texto = registro
 
-                            .replace(
-                                /<[^>]*>/g,
-                                " "
-                            )
+                    .replace(
+                        /<[^>]*>/g,
+                        " "
+                    )
 
-                            .replace(
-                                /&bull;/g,
-                                "•"
-                            )
+                    .replace(
+                        /&bull;/g,
+                        "•"
+                    )
 
-                            .replace(
-                                /&amp;/g,
-                                "&"
-                            )
+                    .replace(
+                        /&amp;/g,
+                        "&"
+                    )
 
-                            .replace(
-                                /&#233;/g,
-                                "é"
-                            )
+                    .replace(
+                        /&#233;/g,
+                        "é"
+                    )
 
-                            .replace(
-                                /&#234;/g,
-                                "ê"
-                            )
+                    .replace(
+                        /&#234;/g,
+                        "ê"
+                    )
 
-                            .replace(
-                                /&#225;/g,
-                                "á"
-                            )
+                    .replace(
+                        /&#225;/g,
+                        "á"
+                    )
 
-                            .replace(
-                                /&#243;/g,
-                                "ó"
-                            )
+                    .replace(
+                        /&#243;/g,
+                        "ó"
+                    )
 
-                            .replace(
-                                /&#231;/g,
-                                "ç"
-                            )
+                    .replace(
+                        /&#231;/g,
+                        "ç"
+                    )
 
-                            .replace(
-                                /&#269;/g,
-                                "č"
-                            )
+                    .replace(
+                        /&#269;/g,
+                        "č"
+                    )
 
-                            .replace(
-                                /&#263;/g,
-                                "ć"
-                            )
+                    .replace(
+                        /&#263;/g,
+                        "ć"
+                    )
 
-                            .replace(
-                                /&#268;/g,
-                                "Č"
-                            )
+                    .replace(
+                        /&#268;/g,
+                        "Č"
+                    )
 
-                            .replace(
-                                /&#252;/g,
-                                "ü"
-                            )
+                    .replace(
+                        /&#252;/g,
+                        "ü"
+                    )
 
-                            .replace(
-                                /&#241;/g,
-                                "ñ"
-                            )
+                    .replace(
+                        /&#241;/g,
+                        "ñ"
+                    )
 
-                            .replace(
-                                /&#355;/g,
-                                "ţ"
-                            )
+                    .replace(
+                        /&#355;/g,
+                        "ţ"
+                    )
 
-                            .replace(
-                                /\s+/g,
-                                " "
-                            )
+                    .replace(
+                        /\s+/g,
+                        " "
+                    )
 
-                            .trim();
-
-
-                        // Status atual
-                        const statusMatch =
-                            texto.match(
-                                /Current status:\s*(.*?)(?:\.\s+[A-Z][A-Za-z]+idae\.)/
-                            );
-
-                        const status =
-                            statusMatch
-                                ? statusMatch[1].trim()
-                                : null;
+                    .trim();
 
 
-                        // Família
-                        const familiaMatch =
-                            texto.match(
-                                /Current status:.*?\.\s+([A-Z][A-Za-z]+idae)\./
-                            );
+                // Nome da espécie
+                const nomeMatch =
+                    texto.match(
+                        /^([A-Z][a-z]+ [a-z-]+)/
+                    );
 
-                        const familia =
-                            familiaMatch
-                                ? familiaMatch[1]
-                                : null;
-
-
-                        // Habitat
-                        const habitatMatch =
-                            texto.match(
-                                /Habitat:\s*(.*?)(?:\.|$)/
-                            );
-
-                        const habitat =
-                            habitatMatch
-                                ? habitatMatch[1]
-                                : null;
+                const nomeEspecie =
+                    nomeMatch
+                        ? nomeMatch[1]
+                        : null;
 
 
-                        resultados.push({
+                // Status atual
+                const statusMatch =
+                    texto.match(
+                        /Current status:\s*(.*?)(?:\.\s+[A-Z][A-Za-z]+idae\.)/
+                    );
 
-                            id,
+                const status =
+                    statusMatch
+                        ? statusMatch[1].trim()
+                        : null;
 
-                            status,
 
-                            familia,
+                // Família
+                const familiaMatch =
+                    texto.match(
+                        /Current status:.*?\.\s+([A-Z][A-Za-z]+idae)\./
+                    );
 
-                            habitat
+                const familia =
+                    familiaMatch
+                        ? familiaMatch[1]
+                        : null;
 
-                        });
+
+                // Habitat
+                const habitatMatch =
+                    texto.match(
+                        /Habitat:\s*(.*?)(?:\.|$)/
+                    );
+
+                const habitat =
+                    habitatMatch
+                        ? habitatMatch[1]
+                        : null;
+
+
+                especies.push({
+
+                    id,
+
+                    nome:
+                        nomeEspecie,
+
+                    status,
+
+                    familia,
+
+                    habitat
+
+                });
+
+            });
+
+        }
+
+
+        eschmeyer = {
+
+            encontrado:
+                especies.length > 0,
+
+            tipo:
+                "familia",
+
+            nome:
+                nome,
+
+            quantidadeEspecies:
+                especies.length,
+
+            especies:
+                especies
+
+        };
+
+
+    } else {
+
+        // =====================================================
+        // CONSULTA DE ESPÉCIE
+        // =====================================================
+
+        // Divide o nome em gênero e espécie
+        const partes =
+            nome.trim().split(/\s+/);
+
+        const genero = partes[0];
+        const especie = partes[1];
+
+        // O Eschmeyer será consultado apenas
+        // quando houver gênero + espécie
+        if (genero && especie) {
+
+            const urlEschmeyer =
+                `https://researcharchive.calacademy.org/research/ichthyology/catalog/fishcatget.asp?tbl=species&genus=${encodeURIComponent(genero)}&species=${encodeURIComponent(especie)}`;
+
+            const respostaEschmeyer =
+                await fetch(urlEschmeyer);
+
+            const html =
+                await respostaEschmeyer.text();
+
+            // Encontra todos os registros
+            const registros =
+                html.match(
+                    /<p class="result"[\s\S]*?<\/p>/g
+                );
+
+            if (registros) {
+
+                const resultados = [];
+
+                registros.forEach((registro) => {
+
+                    // ID
+                    const idMatch =
+                        registro.match(
+                            /spid="(\d+)"/
+                        );
+
+                    const id =
+                        idMatch
+                            ? idMatch[1]
+                            : null;
+
+
+                    // Converte HTML para texto
+                    const texto = registro
+
+                        .replace(
+                            /<[^>]*>/g,
+                            " "
+                        )
+
+                        .replace(
+                            /&bull;/g,
+                            "•"
+                        )
+
+                        .replace(
+                            /&amp;/g,
+                            "&"
+                        )
+
+                        .replace(
+                            /&#233;/g,
+                            "é"
+                        )
+
+                        .replace(
+                            /&#234;/g,
+                            "ê"
+                        )
+
+                        .replace(
+                            /&#225;/g,
+                            "á"
+                        )
+
+                        .replace(
+                            /&#243;/g,
+                            "ó"
+                        )
+
+                        .replace(
+                            /&#231;/g,
+                            "ç"
+                        )
+
+                        .replace(
+                            /&#269;/g,
+                            "č"
+                        )
+
+                        .replace(
+                            /&#263;/g,
+                            "ć"
+                        )
+
+                        .replace(
+                            /&#268;/g,
+                            "Č"
+                        )
+
+                        .replace(
+                            /&#252;/g,
+                            "ü"
+                        )
+
+                        .replace(
+                            /&#241;/g,
+                            "ñ"
+                        )
+
+                        .replace(
+                            /&#355;/g,
+                            "ţ"
+                        )
+
+                        .replace(
+                            /\s+/g,
+                            " "
+                        )
+
+                        .trim();
+
+
+                    // Status atual
+                    const statusMatch =
+                        texto.match(
+                            /Current status:\s*(.*?)(?:\.\s+[A-Z][A-Za-z]+idae\.)/
+                        );
+
+                    const status =
+                        statusMatch
+                            ? statusMatch[1].trim()
+                            : null;
+
+
+                    // Família
+                    const familiaMatch =
+                        texto.match(
+                            /Current status:.*?\.\s+([A-Z][A-Za-z]+idae)\./
+                        );
+
+                    const familia =
+                        familiaMatch
+                            ? familiaMatch[1]
+                            : null;
+
+
+                    // Habitat
+                    const habitatMatch =
+                        texto.match(
+                            /Habitat:\s*(.*?)(?:\.|$)/
+                        );
+
+                    const habitat =
+                        habitatMatch
+                            ? habitatMatch[1]
+                            : null;
+
+
+                    resultados.push({
+
+                        id,
+
+                        status,
+
+                        familia,
+
+                        habitat
 
                     });
 
+                });
 
-                    // Procura primeiro um registro
-                    // que considere o nome válido
-                    const registroValido =
+
+                // Procura primeiro um registro
+                // que considere o nome válido
+                const registroValido =
+                    resultados.find(
+                        registro =>
+                            registro.status &&
+                            registro.status.startsWith(
+                                "Valid as " + nome
+                            )
+                    );
+
+
+                if (registroValido) {
+
+                    eschmeyer = {
+
+                        encontrado: true,
+
+                        tipo: "valido",
+
+                        id:
+                            registroValido.id,
+
+                        status:
+                            registroValido.status,
+
+                        familia:
+                            registroValido.familia,
+
+                        habitat:
+                            registroValido.habitat
+
+                    };
+
+                } else {
+
+                    // Procura um sinônimo
+                    const registroSinonimo =
                         resultados.find(
                             registro =>
                                 registro.status &&
                                 registro.status.startsWith(
-                                    "Valid as " + nome
+                                    "Synonym of "
                                 )
                         );
 
 
-                    if (registroValido) {
+                    if (registroSinonimo) {
+
+                        const nomeAceito =
+                            registroSinonimo.status
+                                .replace(
+                                    "Synonym of ",
+                                    ""
+                                )
+                                .trim();
+
 
                         eschmeyer = {
 
                             encontrado: true,
 
-                            tipo: "valido",
+                            tipo: "sinonimo",
 
-                            id: registroValido.id,
+                            id:
+                                registroSinonimo.id,
 
                             status:
-                                registroValido.status,
+                                registroSinonimo.status,
+
+                            nomeAceito:
+                                nomeAceito,
 
                             familia:
-                                registroValido.familia,
+                                registroSinonimo.familia,
 
                             habitat:
-                                registroValido.habitat
+                                registroSinonimo.habitat
 
                         };
 
                     } else {
 
-                        // Procura um sinônimo
-                        const registroSinonimo =
-                            resultados.find(
-                                registro =>
-                                    registro.status &&
-                                    registro.status.startsWith(
-                                        "Synonym of "
-                                    )
-                            );
+                        // Existe registro, mas a situação
+                        // não é válida nem sinônimo
+                        eschmeyer = {
 
+                            encontrado: true,
 
-                        if (registroSinonimo) {
+                            tipo: "incerto",
 
-                            const nomeAceito =
-                                registroSinonimo.status
-                                    .replace(
-                                        "Synonym of ",
-                                        ""
-                                    )
-                                    .trim();
+                            resultados:
+                                resultados
 
-
-                            eschmeyer = {
-
-                                encontrado: true,
-
-                                tipo: "sinonimo",
-
-                                id:
-                                    registroSinonimo.id,
-
-                                status:
-                                    registroSinonimo.status,
-
-                                nomeAceito:
-                                    nomeAceito,
-
-                                familia:
-                                    registroSinonimo.familia,
-
-                                habitat:
-                                    registroSinonimo.habitat
-
-                            };
-
-                        } else {
-
-                            // Existe registro, mas a situação
-                            // não é válida nem sinônimo
-                            eschmeyer = {
-
-                                encontrado: true,
-
-                                tipo: "incerto",
-
-                                resultados:
-                                    resultados
-
-                            };
-
-                        }
+                        };
 
                     }
-
-                } else {
-
-                    eschmeyer = {
-
-                        encontrado: false
-
-                    };
 
                 }
 
@@ -517,33 +726,44 @@ app.get("/api/taxon", async (req, res) => {
 
                 eschmeyer = {
 
-                    encontrado: false,
-
-                    motivo:
-                        "Consulta de espécie requer gênero e espécie."
+                    encontrado: false
 
                 };
 
             }
 
-        } catch (erroEschmeyer) {
-
-            console.error(
-                "Erro ao consultar Eschmeyer:",
-                erroEschmeyer
-            );
+        } else {
 
             eschmeyer = {
 
                 encontrado: false,
 
-                erro:
-                    "Não foi possível consultar o Eschmeyer."
+                motivo:
+                    "Consulta de espécie requer gênero e espécie."
 
             };
 
         }
 
+    }
+
+} catch (erroEschmeyer) {
+
+    console.error(
+        "Erro ao consultar Eschmeyer:",
+        erroEschmeyer
+    );
+
+    eschmeyer = {
+
+        encontrado: false,
+
+        erro:
+            "Não foi possível consultar o Eschmeyer."
+
+    };
+
+}
 
         // =====================================================
         // RESPOSTA FINAL
