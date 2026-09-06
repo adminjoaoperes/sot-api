@@ -1,790 +1,551 @@
 <!DOCTYPE html>
+
 <html lang="pt-BR">
 
 <head>
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>SOT - Consulta Taxonômica</title>
-
-    <style>
-
-        :root {
-            --verde-musgo: #556B2F;
-            --verde-musgo-escuro: #3F5222;
-            --verde-claro: #E8EEDC;
-            --fundo: #F5F6F2;
-            --branco: #FFFFFF;
-            --texto: #273026;
-            --cinza: #6B716B;
-            --borda: #DDE2D8;
-            --verde-status: #3F7D35;
-            --vermelho: #A94442;
-            --amarelo: #A87918;
-        }
-
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-
-        body {
-
-            font-family: Arial, Helvetica, sans-serif;
-
-            background: var(--fundo);
-
-            color: var(--texto);
-
-            min-height: 100vh;
-
-        }
-
-
-        /* =====================================================
-           CABEÇALHO
-        ===================================================== */
-
-        header {
-
-            background: var(--verde-musgo);
-
-            color: white;
-
-            padding: 18px 30px;
-
-            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-
-        }
-
-
-        .header-container {
-
-            max-width: 1100px;
-
-            margin: auto;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: space-between;
-
-        }
-
-
-        .logo {
-
-            font-size: 26px;
-
-            font-weight: bold;
-
-            letter-spacing: 1px;
-
-        }
-
-
-        .logo-subtitle {
-
-            font-size: 12px;
-
-            opacity: 0.85;
-
-            margin-top: 3px;
-
-        }
-
-
-        /* =====================================================
-           CONTEÚDO
-        ===================================================== */
-
-        main {
-
-            max-width: 1100px;
-
-            margin: 40px auto;
-
-            padding: 0 20px;
-
-        }
-
-
-        .titulo {
-
-            margin-bottom: 8px;
-
-            font-size: 30px;
-
-        }
-
-
-        .descricao {
-
-            color: var(--cinza);
-
-            margin-bottom: 25px;
-
-        }
-
-
-        /* =====================================================
-           PESQUISA
-        ===================================================== */
-
-        .pesquisa {
-
-            background: var(--branco);
-
-            padding: 20px;
-
-            border-radius: 12px;
-
-            border: 1px solid var(--borda);
-
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-
-            display: flex;
-
-            gap: 10px;
-
-            margin-bottom: 30px;
-
-        }
-
-
-        #campoBusca {
-
-            flex: 1;
-
-            padding: 14px 16px;
-
-            border: 1px solid var(--borda);
-
-            border-radius: 8px;
-
-            font-size: 16px;
-
-            outline: none;
-
-        }
-
-
-        #campoBusca:focus {
-
-            border-color: var(--verde-musgo);
-
-            box-shadow: 0 0 0 2px var(--verde-claro);
-
-        }
-
-
-        #botaoBuscar {
-
-            background: var(--verde-musgo);
-
-            color: white;
-
-            border: none;
-
-            border-radius: 8px;
-
-            padding: 0 25px;
-
-            font-size: 15px;
-
-            font-weight: bold;
-
-            cursor: pointer;
-
-        }
-
-
-        #botaoBuscar:hover {
-
-            background: var(--verde-musgo-escuro);
-
-        }
-
-
-        /* =====================================================
-           CARREGANDO
-        ===================================================== */
-
-        #carregando {
-
-            display: none;
-
-            text-align: center;
-
-            padding: 30px;
-
-            color: var(--cinza);
-
-        }
-
-
-        /* =====================================================
-           RESULTADO PRINCIPAL
-        ===================================================== */
-
-        .taxon-card {
-
-            background: white;
-
-            border: 1px solid var(--borda);
-
-            border-radius: 12px;
-
-            padding: 25px;
-
-            margin-bottom: 25px;
-
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-
-        }
-
-
-        .taxon-nome {
-
-            font-size: 28px;
-
-            font-style: italic;
-
-            color: var(--verde-musgo-escuro);
-
-            margin-bottom: 5px;
-
-        }
-
-
-        .taxon-autoria {
-
-            color: var(--cinza);
-
-            margin-bottom: 20px;
-
-        }
-
-
-        /* =====================================================
-           CLASSIFICAÇÃO
-        ===================================================== */
-
-        .secao-titulo {
-
-            font-size: 19px;
-
-            margin-bottom: 15px;
-
-            color: var(--verde-musgo-escuro);
-
-        }
-
-
-        .classificacao {
-
-            display: grid;
-
-            grid-template-columns: repeat(3, 1fr);
-
-            gap: 10px;
-
-        }
-
-
-        .classificacao-item {
-
-            background: var(--fundo);
-
-            border: 1px solid var(--borda);
-
-            border-radius: 8px;
-
-            padding: 12px;
-
-        }
-
-
-        .classificacao-label {
-
-            display: block;
-
-            font-size: 12px;
-
-            color: var(--cinza);
-
-            margin-bottom: 5px;
-
-            text-transform: uppercase;
-
-        }
-
-
-        .classificacao-valor {
-
-            font-weight: bold;
-
-        }
-
-
-        /* =====================================================
-           FONTES
-        ===================================================== */
-
-        .fontes {
-
-            display: grid;
-
-            grid-template-columns: repeat(3, 1fr);
-
-            gap: 15px;
-
-        }
-
-
-        .fonte {
-
-            background: white;
-
-            border: 1px solid var(--borda);
-
-            border-radius: 12px;
-
-            padding: 20px;
-
-        }
-
-
-        .fonte h3 {
-
-            margin-bottom: 15px;
-
-            font-size: 17px;
-
-        }
-
-
-        .fonte-status {
-
-            display: inline-block;
-
-            padding: 5px 10px;
-
-            border-radius: 20px;
-
-            font-size: 12px;
-
-            font-weight: bold;
-
-            margin-bottom: 15px;
-
-        }
-
-
-        .status-ok {
-
-            background: #E1F0DE;
-
-            color: var(--verde-status);
-
-        }
-
-
-        .status-sinonimo {
-
-            background: #F8E8E8;
-
-            color: var(--vermelho);
-
-        }
-
-
-        .status-incerto {
-
-            background: #FFF3D5;
-
-            color: var(--amarelo);
-
-        }
-
-
-        .fonte-info {
-
-            margin-top: 8px;
-
-            font-size: 14px;
-
-            line-height: 1.5;
-
-        }
-
-
-        .fonte-label {
-
-            color: var(--cinza);
-
-        }
-
-
-        /* =====================================================
-           FONTES COMPLEMENTARES
-        ===================================================== */
-
-        .fontes-complementares {
-
-            display: grid;
-
-            grid-template-columns: repeat(2, 1fr);
-
-            gap: 15px;
-
-            margin-bottom: 30px;
-
-        }
-
-
-        .fonte-complementar {
-
-            background: white;
-
-            border: 1px solid var(--borda);
-
-            border-radius: 12px;
-
-            padding: 20px;
-
-            min-height: 150px;
-
-            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-
-        }
-
-
-        .fonte-complementar h3 {
-
-            font-size: 18px;
-
-            color: var(--verde-musgo-escuro);
-
-            margin-bottom: 10px;
-
-        }
-
-
-        .fonte-complementar p {
-
-            color: var(--cinza);
-
-            font-size: 14px;
-
-            line-height: 1.5;
-
-            margin-bottom: 12px;
-
-        }
-
-
-        .fonte-link {
-
-            display: inline-block;
-
-            background: var(--verde-musgo);
-
-            color: white;
-
-            text-decoration: none;
-
-            padding: 9px 14px;
-
-            border-radius: 7px;
-
-            font-size: 13px;
-
-            font-weight: bold;
-
-        }
-
-
-        .fonte-link:hover {
-
-            background: var(--verde-musgo-escuro);
-
-        }
-
-
-        .wiki-imagem {
-
-            max-width: 100%;
-
-            max-height: 180px;
-
-            display: block;
-
-            margin: 0 auto 15px auto;
-
-            border-radius: 8px;
-
-        }
-
-
-        /* =====================================================
-           PESQUISA ACADÊMICA
-        ===================================================== */
-
-        .buscas-academicas {
-
-            display: grid;
-
-            grid-template-columns: repeat(4, 1fr);
-
-            gap: 12px;
-
-            margin-bottom: 30px;
-
-        }
-
-
-        .busca-academica {
-
-            display: block;
-
-            background: white;
-
-            border: 1px solid var(--borda);
-
-            border-radius: 10px;
-
-            padding: 18px;
-
-            text-decoration: none;
-
-            color: var(--texto);
-
-            transition: 0.2s;
-
-        }
-
-
-        .busca-academica:hover {
-
-            border-color: var(--verde-musgo);
-
-            transform: translateY(-2px);
-
-            box-shadow: 0 4px 10px rgba(0,0,0,0.06);
-
-        }
-
-
-        .busca-academica strong {
-
-            display: block;
-
-            color: var(--verde-musgo-escuro);
-
-            margin-bottom: 7px;
-
-        }
-
-
-        .busca-academica span {
-
-            font-size: 13px;
-
-            color: var(--cinza);
-
-            line-height: 1.4;
-
-        }
-
-
-        /* =====================================================
-           MENSAGEM
-        ===================================================== */
-
-        .mensagem {
-
-            background: white;
-
-            border: 1px solid var(--borda);
-
-            border-radius: 10px;
-
-            padding: 20px;
-
-            text-align: center;
-
-            color: var(--cinza);
-
-        }
-
-
-        /* =====================================================
-           RESPONSIVO
-        ===================================================== */
-
-        @media (max-width: 800px) {
-
-            .classificacao {
-
-                grid-template-columns: repeat(2, 1fr);
-
-            }
-
-            .fontes {
-
-                grid-template-columns: 1fr;
-
-            }
-
-            .fontes-complementares {
-
-                grid-template-columns: 1fr;
-
-            }
-
-            .buscas-academicas {
-
-                grid-template-columns: repeat(2, 1fr);
-
-            }
-
-        }
-
-
-        @media (max-width: 600px) {
-
-            .pesquisa {
-
-                flex-direction: column;
-
-            }
-
-            #botaoBuscar {
-
-                padding: 14px;
-
-            }
-
-            .classificacao {
-
-                grid-template-columns: 1fr;
-
-            }
-
-            .titulo {
-
-                font-size: 25px;
-
-            }
-
-            .buscas-academicas {
-
-                grid-template-columns: 1fr;
-
-            }
-
-        }
-
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SOT - Consulta Taxonômica</title>
+
+<style>
+
+:root {
+    --verde: #556B2F;
+    --verde-escuro: #3F5222;
+    --verde-claro: #E8EEDC;
+    --fundo: #F5F6F2;
+    --branco: #FFFFFF;
+    --texto: #273026;
+    --cinza: #6B716B;
+    --borda: #DDE2D8;
+    --sucesso: #3F7D35;
+    --vermelho: #A94442;
+    --amarelo: #A87918;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: var(--fundo);
+    color: var(--texto);
+    min-height: 100vh;
+}
+
+header {
+    background: var(--verde);
+    color: white;
+    padding: 18px 30px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.header-container {
+    max-width: 1200px;
+    margin: auto;
+}
+
+.logo {
+    font-size: 26px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.logo-subtitle {
+    font-size: 12px;
+    opacity: .85;
+    margin-top: 3px;
+}
+
+main {
+    max-width: 1200px;
+    margin: 35px auto;
+    padding: 0 20px;
+}
+
+.titulo {
+    font-size: 30px;
+    margin-bottom: 8px;
+}
+
+.descricao {
+    color: var(--cinza);
+    margin-bottom: 25px;
+}
+
+.pesquisa {
+    background: white;
+    padding: 18px;
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+
+#campoBusca {
+    flex: 1;
+    padding: 14px 16px;
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+}
+
+#campoBusca:focus {
+    border-color: var(--verde);
+    box-shadow: 0 0 0 2px var(--verde-claro);
+}
+
+#botaoBuscar {
+    background: var(--verde);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0 28px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#botaoBuscar:hover {
+    background: var(--verde-escuro);
+}
+
+#carregando {
+    display: none;
+    text-align: center;
+    padding: 35px;
+    color: var(--cinza);
+}
+
+.taxon-card {
+    background: white;
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+
+.taxon-nome {
+    font-size: 29px;
+    font-style: italic;
+    color: var(--verde-escuro);
+}
+
+.taxon-autoria {
+    color: var(--cinza);
+    margin-top: 5px;
+    margin-bottom: 22px;
+}
+
+.secao-titulo {
+    font-size: 20px;
+    color: var(--verde-escuro);
+    margin: 25px 0 15px;
+}
+
+.classificacao {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.classificacao-item {
+    background: var(--fundo);
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+    padding: 13px;
+}
+
+.classificacao-label {
+    display: block;
+    color: var(--cinza);
+    font-size: 11px;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+.classificacao-valor {
+    font-weight: bold;
+}
+
+.fontes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.fonte {
+    background: white;
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    padding: 20px;
+    min-width: 0;
+}
+
+.fonte h3 {
+    margin-bottom: 12px;
+    font-size: 17px;
+    color: var(--verde-escuro);
+}
+
+.fonte-status {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 14px;
+}
+
+.status-ok {
+    background: #E1F0DE;
+    color: var(--sucesso);
+}
+
+.status-sinonimo {
+    background: #F8E8E8;
+    color: var(--vermelho);
+}
+
+.status-incerto {
+    background: #FFF3D5;
+    color: var(--amarelo);
+}
+
+.fonte-info {
+    margin-top: 9px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.fonte-label {
+    color: var(--cinza);
+}
+
+.detalhes {
+    margin-top: 18px;
+    border-top: 1px solid var(--borda);
+    padding-top: 15px;
+}
+
+.detalhes summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: var(--verde-escuro);
+}
+
+.lista-controle {
+    margin-top: 15px;
+}
+
+.lista-controle input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--borda);
+    border-radius: 7px;
+    outline: none;
+}
+
+.lista-controle input:focus {
+    border-color: var(--verde);
+}
+
+.lista-especies {
+    margin-top: 12px;
+    max-height: 450px;
+    overflow-y: auto;
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+}
+
+.especie {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--borda);
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.especie:last-child {
+    border-bottom: none;
+}
+
+.especie:hover {
+    background: var(--verde-claro);
+}
+
+.especie-nome {
+    font-style: italic;
+    font-weight: bold;
+}
+
+.especie-autoria {
+    color: var(--cinza);
+}
+
+.especie-status {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    background: #eee;
+}
+
+.paginacao {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.paginacao button {
+    background: var(--verde);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 13px;
+    cursor: pointer;
+}
+
+.paginacao button:disabled {
+    opacity: .4;
+    cursor: default;
+}
+
+.pagina-info {
+    color: var(--cinza);
+    font-size: 13px;
+}
+
+.fontes-complementares {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.fonte-complementar {
+    background: white;
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.fonte-complementar h3 {
+    color: var(--verde-escuro);
+    margin-bottom: 10px;
+}
+
+.fonte-complementar p {
+    color: var(--cinza);
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+
+.fonte-link {
+    display: inline-block;
+    background: var(--verde);
+    color: white;
+    text-decoration: none;
+    padding: 9px 14px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.fonte-link:hover {
+    background: var(--verde-escuro);
+}
+
+.buscas-academicas {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 30px;
+}
+
+.busca-academica {
+    display: block;
+    background: white;
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    padding: 18px;
+    text-decoration: none;
+    color: var(--texto);
+    transition: .2s;
+}
+
+.busca-academica:hover {
+    border-color: var(--verde);
+    transform: translateY(-2px);
+}
+
+.busca-academica strong {
+    display: block;
+    color: var(--verde-escuro);
+    margin-bottom: 7px;
+}
+
+.busca-academica span {
+    font-size: 13px;
+    color: var(--cinza);
+    line-height: 1.4;
+}
+
+.mensagem {
+    background: white;
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    color: var(--cinza);
+}
+
+.badge-contagem {
+    display: inline-block;
+    background: var(--verde-claro);
+    color: var(--verde-escuro);
+    border-radius: 20px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+@media (max-width: 900px) {
+
+    .fontes {
+        grid-template-columns: 1fr;
+    }
+
+    .classificacao {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .buscas-academicas {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+@media (max-width: 600px) {
+
+    .pesquisa {
+        flex-direction: column;
+    }
+
+    #botaoBuscar {
+        padding: 14px;
+    }
+
+    .classificacao,
+    .fontes-complementares,
+    .buscas-academicas {
+        grid-template-columns: 1fr;
+    }
+
+    .titulo {
+        font-size: 25px;
+    }
+
+}
+
+</style>
 
 </head>
 
-
 <body>
-
 
 <header>
 
-    <div class="header-container">
+<div class="header-container">
 
-        <div>
+<div class="logo">SOT</div>
 
-            <div class="logo">SOT</div>
+<div class="logo-subtitle">
+SYSTEM OF TAXONOMY | FONTES DE PESQUISA
+</div>
 
-            <div class="logo-subtitle">
-                SYSTEM OF TAXONOMY | FONTES DE PESQUISA
-            </div>
-
-        </div>
-
-    </div>
+</div>
 
 </header>
 
-
 <main>
 
+<h1 class="titulo">
+Consulta Taxonômica
+</h1>
 
-    <h1 class="titulo">
-        Consulta Taxonômica
-    </h1>
+<p class="descricao">
+Consulte informações taxonômicas em diferentes fontes científicas.
+</p>
 
+<div class="pesquisa">
 
-    <p class="descricao">
-        Consulte informações taxonômicas em diferentes fontes científicas.
-    </p>
+<input
+type="text"
+id="campoBusca"
+placeholder="Digite um nome científico. Ex.: Labridae"
 
+>
 
-    <!-- PESQUISA -->
+<button
+id="botaoBuscar"
+onclick="consultarTaxon()"
 
-    <div class="pesquisa">
+>
 
-        <input
-            type="text"
-            id="campoBusca"
-            placeholder="Digite um nome científico. Ex.: Solea solea"
-        >
+Consultar </button>
 
-        <button
-            id="botaoBuscar"
-            onclick="consultarTaxon()"
-        >
-            Consultar
-        </button>
+</div>
 
-    </div>
+<div id="carregando">
+🔎 Consultando fontes taxonômicas...
+</div>
 
-
-    <!-- CARREGANDO -->
-
-    <div id="carregando">
-
-        🔎 Consultando fontes taxonômicas...
-
-    </div>
-
-
-    <!-- RESULTADO -->
-
-    <div id="resultado"></div>
-
+<div id="resultado"></div>
 
 </main>
 
-
 <script>
-
-
-// =====================================================
-// ENDEREÇO DA SUA API
-// =====================================================
 
 const API_URL =
     "https://sot-api.onrender.com/api/taxon";
 
 
 // =====================================================
-// CONSULTAR
+// SEGURANÇA
+// =====================================================
+
+function escaparHTML(valor) {
+
+    if (valor === null || valor === undefined)
+        return "";
+
+    return String(valor)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+// =====================================================
+// CONSULTA
 // =====================================================
 
 async function consultarTaxon() {
-
 
     const campo =
         document.getElementById("campoBusca");
@@ -795,10 +556,8 @@ async function consultarTaxon() {
     const carregando =
         document.getElementById("carregando");
 
-
     const nome =
         campo.value.trim();
-
 
     if (!nome) {
 
@@ -812,23 +571,16 @@ async function consultarTaxon() {
 
     }
 
-// =====================================================
-// ATUALIZA A URL
-// =====================================================
-
-history.pushState(
-    {},
-    "",
-    "/taxon/" + encodeURIComponent(nome)
-);
+    history.pushState(
+        {},
+        "",
+        "/taxon/" + encodeURIComponent(nome)
+    );
 
     carregando.style.display = "block";
-
     resultado.innerHTML = "";
 
-
     try {
-
 
         const resposta =
             await fetch(
@@ -836,7 +588,6 @@ history.pushState(
                 "?q=" +
                 encodeURIComponent(nome)
             );
-
 
         if (!resposta.ok) {
 
@@ -846,13 +597,10 @@ history.pushState(
 
         }
 
-
         const dados =
             await resposta.json();
 
-
         mostrarResultado(dados);
-
 
     }
 
@@ -861,21 +609,14 @@ history.pushState(
         console.error(erro);
 
         resultado.innerHTML = `
-
             <div class="mensagem">
-
                 ❌ Não foi possível realizar a consulta.
-
                 <br><br>
-
                 Verifique se a API está disponível.
-
             </div>
-
         `;
 
     }
-
 
     finally {
 
@@ -887,128 +628,91 @@ history.pushState(
 
 
 // =====================================================
-// MOSTRAR RESULTADO
+// RESULTADO
 // =====================================================
 
 function mostrarResultado(dados) {
 
-
-    const resultado =
-        document.getElementById("resultado");
-
-
     const cb =
         dados.checklistbank;
-
 
     const worms =
         dados.worms;
 
-
     const esch =
         dados.eschmeyer;
 
-
-    // =================================================
-    // DADOS PRINCIPAIS
-    // =================================================
-
-    let nome =
+    const nome =
         cb?.nome ||
         worms?.nome ||
         dados.consulta;
 
-
-    let autoria =
+    const autoria =
         cb?.autoria ||
         worms?.autoria ||
         "";
 
-
-    // =================================================
-    // CLASSIFICAÇÃO
-    // =================================================
-
-    let reino =
+    const reino =
         cb?.reino ||
         worms?.reino ||
         "-";
 
-
-    let filo =
+    const filo =
         cb?.filo ||
         worms?.filo ||
         "-";
 
-
-    let classe =
+    const classe =
         cb?.classe ||
         worms?.classe ||
         "-";
 
-
-    let ordem =
+    const ordem =
         cb?.ordem ||
         worms?.ordem ||
         "-";
 
-
-    let familia =
+    const familia =
         cb?.familia ||
         worms?.familia ||
         "-";
 
-
-    let genero =
+    const genero =
         worms?.genero ||
         "-";
-
-
-    // =================================================
-    // CARD PRINCIPAL
-    // =================================================
 
     let html = `
 
         <div class="taxon-card">
 
             <div class="taxon-nome">
-                ${nome}
+                ${escaparHTML(nome)}
             </div>
 
             <div class="taxon-autoria">
-                ${autoria}
+                ${escaparHTML(autoria)}
             </div>
-
 
             <h2 class="secao-titulo">
                 Classificação
             </h2>
 
-
             <div class="classificacao">
 
                 ${itemClassificacao("Reino", reino)}
-
                 ${itemClassificacao("Filo", filo)}
-
                 ${itemClassificacao("Classe", classe)}
-
                 ${itemClassificacao("Ordem", ordem)}
-
                 ${itemClassificacao("Família", familia)}
-
                 ${itemClassificacao("Gênero", genero)}
 
             </div>
 
         </div>
 
-
         <h2 class="secao-titulo">
             Fontes taxonômicas
         </h2>
-
 
         <div class="fontes">
 
@@ -1020,14 +724,9 @@ function mostrarResultado(dados) {
 
         </div>
 
-
-        <br>
-
-
         <h2 class="secao-titulo">
             Informações complementares
         </h2>
-
 
         <div class="fontes-complementares">
 
@@ -1035,36 +734,23 @@ function mostrarResultado(dados) {
                 class="fonte-complementar"
                 id="wikipediaCard"
             >
-
                 <h3>Wikipedia (English)</h3>
-
-                <p>
-                    🔎 Procurando informações...
-                </p>
-
+                <p>🔎 Procurando informações...</p>
             </div>
-
 
             <div
                 class="fonte-complementar"
                 id="wikispeciesCard"
             >
-
                 <h3>Wikispecies</h3>
-
-                <p>
-                    🔎 Procurando informações...
-                </p>
-
+                <p>🔎 Procurando informações...</p>
             </div>
 
         </div>
 
-
         <h2 class="secao-titulo">
             Pesquisa acadêmica
         </h2>
-
 
         <div class="buscas-academicas">
 
@@ -1075,15 +761,11 @@ function mostrarResultado(dados) {
                 target="_blank"
                 rel="noopener noreferrer"
             >
-
                 <strong>🎓 Google Scholar</strong>
-
                 <span>
                     Pesquisar artigos e trabalhos acadêmicos.
                 </span>
-
             </a>
-
 
             <a
                 id="linkPubMed"
@@ -1092,15 +774,11 @@ function mostrarResultado(dados) {
                 target="_blank"
                 rel="noopener noreferrer"
             >
-
                 <strong>🧬 PubMed</strong>
-
                 <span>
-                    Pesquisar literatura biomédica e científica.
+                    Pesquisar literatura científica.
                 </span>
-
             </a>
-
 
             <a
                 id="linkCrossref"
@@ -1109,15 +787,11 @@ function mostrarResultado(dados) {
                 target="_blank"
                 rel="noopener noreferrer"
             >
-
                 <strong>📚 Crossref</strong>
-
                 <span>
-                    Pesquisar publicações e registros acadêmicos.
+                    Pesquisar publicações acadêmicas.
                 </span>
-
             </a>
-
 
             <a
                 id="linkGoogle"
@@ -1126,38 +800,27 @@ function mostrarResultado(dados) {
                 target="_blank"
                 rel="noopener noreferrer"
             >
-
                 <strong>🔎 Web</strong>
-
                 <span>
-                    Pesquisar o nome científico junto com artigos científicos.
+                    Pesquisar informações científicas na Web.
                 </span>
-
             </a>
 
         </div>
 
     `;
 
-
-    resultado.innerHTML = html;
-
-
-    // =================================================
-    // NOVAS CONSULTAS
-    // =================================================
+    document.getElementById("resultado").innerHTML = html;
 
     consultarWikipedia(nome);
-
     consultarWikispecies(nome);
-
     configurarPesquisasAcademicas(nome);
 
 }
 
 
 // =====================================================
-// ITEM DE CLASSIFICAÇÃO
+// CLASSIFICAÇÃO
 // =====================================================
 
 function itemClassificacao(label, valor) {
@@ -1171,7 +834,7 @@ function itemClassificacao(label, valor) {
             </span>
 
             <span class="classificacao-valor">
-                ${valor}
+                ${escaparHTML(valor)}
             </span>
 
         </div>
@@ -1186,7 +849,6 @@ function itemClassificacao(label, valor) {
 // =====================================================
 
 function cardChecklistBank(dados) {
-
 
     if (!dados || !dados.encontrado) {
 
@@ -1206,62 +868,60 @@ function cardChecklistBank(dados) {
 
     }
 
-// -----------------------------------------------
-// FAMÍLIA
-// -----------------------------------------------
+    if (dados.rank === "family") {
 
-if (dados.rank === "family") {
+        const especies =
+            dados.especies || [];
 
-    const especies =
-        dados.especies || [];
+        return `
 
-    let listaEspecies = "";
+            <div class="fonte">
 
-    if (especies.length > 0) {
+                <h3>ChecklistBank</h3>
 
-        listaEspecies = `
-
-            <div class="fonte-info">
-
-                <span class="fonte-label">
-                    Espécies:
+                <span class="fonte-status status-ok">
+                    ✓ Família encontrada
                 </span>
 
-                <ul
-                    style="
-                        margin-top: 8px;
-                        padding-left: 20px;
-                    "
-                >
+                ${info(
+                    "Família",
+                    `<i>${escaparHTML(dados.nome)}</i>`
+                )}
 
-                    ${especies.map((especie) => `
+                ${info(
+                    "Autoria",
+                    escaparHTML(dados.autoria || "-")
+                )}
 
-                        <li
-                            style="
-                                margin-bottom: 6px;
-                            "
-                        >
-                            <i>
-                                ${especie.nome}
-                                ${especie.autoria || ""}
-                            </i>
-                        </li>
+                ${info(
+                    "Status",
+                    escaparHTML(dados.status || "-")
+                )}
 
-                    `).join("")}
+                ${dados.nomeAceito
+                    ? info(
+                        "Nome aceito",
+                        `<i>${escaparHTML(dados.nomeAceito)}</i>`
+                    )
+                    : ""
+                }
 
-                </ul>
+                <div class="fonte-info">
 
-            </div>
+                    <span class="fonte-label">
+                        Espécies encontradas:
+                    </span>
 
-        `;
+                    <span class="badge-contagem">
+                        ${especies.length}
+                    </span>
 
-    } else {
+                </div>
 
-        listaEspecies = `
-
-            <div class="fonte-info">
-
-                Nenhuma espécie encontrada.
+                ${criarListaEspecies(
+                    especies,
+                    "checklist"
+                )}
 
             </div>
 
@@ -1269,59 +929,15 @@ if (dados.rank === "family") {
 
     }
 
-
-    return `
-
-        <div class="fonte">
-
-            <h3>ChecklistBank</h3>
-
-            <span class="fonte-status status-ok">
-                ✓ Família encontrada
-            </span>
-
-
-            <div class="fonte-info">
-
-                <span class="fonte-label">
-                    Família:
-                </span>
-
-                <i>${dados.nome}</i>
-
-            </div>
-
-
-            <div class="fonte-info">
-
-                <span class="fonte-label">
-                    Espécies encontradas:
-                </span>
-
-                ${especies.length}
-
-            </div>
-
-
-            ${listaEspecies}
-
-        </div>
-
-    `;
-
-}
-
-    let classeStatus =
+    const classeStatus =
         dados.status === "accepted"
             ? "status-ok"
             : "status-sinonimo";
 
-
-    let textoStatus =
+    const textoStatus =
         dados.status === "accepted"
             ? "✓ Aceito"
             : "⚠ Sinônimo";
-
 
     return `
 
@@ -1333,38 +949,32 @@ if (dados.rank === "family") {
                 ${textoStatus}
             </span>
 
+            ${info(
+                "Nome",
+                `<i>${escaparHTML(dados.nome)}</i>`
+            )}
 
-            <div class="fonte-info">
+            ${info(
+                "Autoria",
+                escaparHTML(dados.autoria || "-")
+            )}
 
-                <span class="fonte-label">
-                    Nome:
-                </span>
+            ${info(
+                "Status",
+                escaparHTML(dados.status || "-")
+            )}
 
-                <i>${dados.nome}</i>
+            ${info(
+                "Nome aceito",
+                dados.nomeAceito
+                    ? `<i>${escaparHTML(dados.nomeAceito)}</i>`
+                    : "-"
+            )}
 
-            </div>
-
-
-            <div class="fonte-info">
-
-                <span class="fonte-label">
-                    Autoria:
-                </span>
-
-                ${dados.autoria || "-"}
-
-            </div>
-
-
-            <div class="fonte-info">
-
-                <span class="fonte-label">
-                    Família:
-                </span>
-
-                ${dados.familia || "-"}
-
-            </div>
+            ${info(
+                "Família",
+                escaparHTML(dados.familia || "-")
+            )}
 
         </div>
 
@@ -1378,7 +988,6 @@ if (dados.rank === "family") {
 // =====================================================
 
 function cardWorms(dados) {
-
 
     if (!dados || !dados.encontrado) {
 
@@ -1398,18 +1007,48 @@ function cardWorms(dados) {
 
     }
 
-
-    let classeStatus =
-        dados.status === "accepted"
+    const classeStatus =
+        dados.tipo === "valido"
             ? "status-ok"
             : "status-sinonimo";
 
-
-    let textoStatus =
-        dados.status === "accepted"
-            ? "✓ Aceito"
+    const textoStatus =
+        dados.tipo === "valido"
+            ? "✓ Válido"
             : "⚠ Não aceito";
 
+    let listaFamilia = "";
+
+    if (
+        dados.rank &&
+        dados.rank.toLowerCase() === "family"
+    ) {
+
+        const especies =
+            dados.especies || [];
+
+        listaFamilia = `
+
+            <div class="fonte-info">
+
+                <span class="fonte-label">
+                    Espécies encontradas:
+                </span>
+
+                <span class="badge-contagem">
+                    ${especies.length}
+                </span>
+
+            </div>
+
+            ${criarListaEspecies(
+                especies,
+                "worms"
+            )}
+
+        `;
+
+    }
 
     return `
 
@@ -1421,49 +1060,59 @@ function cardWorms(dados) {
                 ${textoStatus}
             </span>
 
+            ${info(
+                "AphiaID",
+                escaparHTML(dados.aphiaID || "-")
+            )}
 
-            <div class="fonte-info">
+            ${info(
+                "Nome",
+                `<i>${escaparHTML(dados.nome)}</i>`
+            )}
 
-                <span class="fonte-label">
-                    Nome:
-                </span>
+            ${info(
+                "Autoria",
+                escaparHTML(dados.autoria || "-")
+            )}
 
-                <i>${dados.nome}</i>
+            ${info(
+                "Rank",
+                escaparHTML(dados.rank || "-")
+            )}
 
-            </div>
+            ${info(
+                "Status",
+                escaparHTML(dados.status || "-")
+            )}
 
+            ${info(
+                "Nome aceito",
+                dados.nomeAceito
+                    ? `<i>${escaparHTML(dados.nomeAceito)}</i>`
+                    : "-"
+            )}
 
-            <div class="fonte-info">
+            ${info(
+                "AphiaID aceito",
+                escaparHTML(dados.aphiaIDAceito || "-")
+            )}
 
-                <span class="fonte-label">
-                    Nome aceito:
-                </span>
+            ${info(
+                "Família",
+                escaparHTML(dados.familia || "-")
+            )}
 
-                <i>${dados.nomeAceito || "-"}</i>
+            ${info(
+                "Gênero",
+                escaparHTML(dados.genero || "-")
+            )}
 
-            </div>
+            ${info(
+                "Habitat",
+                habitatWorms(dados)
+            )}
 
-
-            <div class="fonte-info">
-
-                <span class="fonte-label">
-                    Família:
-                </span>
-
-                ${dados.familia || "-"}
-
-            </div>
-
-
-            <div class="fonte-info">
-
-                <span class="fonte-label">
-                    Habitat:
-                </span>
-
-                ${habitatWorms(dados)}
-
-            </div>
+            ${listaFamilia}
 
         </div>
 
@@ -1473,34 +1122,299 @@ function cardWorms(dados) {
 
 
 // =====================================================
-// HABITAT WORMS
+// LISTA DE ESPÉCIES
 // =====================================================
 
-function habitatWorms(dados) {
+function criarListaEspecies(especies, origem) {
+
+    if (!especies || especies.length === 0) {
+
+        return `
+
+            <div class="detalhes">
+
+                <div class="fonte-info">
+                    Nenhuma espécie encontrada.
+                </div>
+
+            </div>
+
+        `;
+
+    }
+
+    const id =
+        "lista_" +
+        origem +
+        "_" +
+        Math.random()
+            .toString(36)
+            .substring(2, 8);
+
+    setTimeout(() => {
+
+        configurarLista(
+            id,
+            especies,
+            origem
+        );
+
+    }, 0);
+
+    return `
+
+        <details class="detalhes" open>
+
+            <summary>
+                Ver espécies
+            </summary>
+
+            <div
+                class="lista-controle"
+                id="${id}"
+            >
+
+                <input
+                    type="text"
+                    placeholder="Pesquisar espécie..."
+                    oninput="filtrarLista('${id}')"
+                >
+
+                <div class="lista-especies"></div>
+
+                <div class="paginacao">
+
+                    <button
+                        class="btn-anterior"
+                        onclick="mudarPagina('${id}', -1)"
+                    >
+                        ← Anterior
+                    </button>
+
+                    <span class="pagina-info">
+                        Página 1
+                    </span>
+
+                    <button
+                        class="btn-proxima"
+                        onclick="mudarPagina('${id}', 1)"
+                    >
+                        Próxima →
+                    </button>
+
+                </div>
+
+            </div>
+
+        </details>
+
+    `;
+
+}
 
 
-    let habitats = [];
+// =====================================================
+// CONTROLE DAS LISTAS
+// =====================================================
+
+const listasEspecies = {};
+
+function configurarLista(id, especies, origem) {
+
+    listasEspecies[id] = {
+
+        todas: especies,
+        filtradas: especies,
+        pagina: 1,
+        porPagina: 50,
+        origem: origem
+
+    };
+
+    renderizarLista(id);
+
+}
 
 
-    if (dados.marinho)
-        habitats.push("Marinho");
+function filtrarLista(id) {
+
+    const controle =
+        document.getElementById(id);
+
+    if (!controle)
+        return;
+
+    const termo =
+        controle
+            .querySelector("input")
+            .value
+            .toLowerCase()
+            .trim();
+
+    const lista =
+        listasEspecies[id];
+
+    if (!lista)
+        return;
+
+    lista.filtradas =
+        lista.todas.filter(especie => {
+
+            const nome =
+                (
+                    especie.nome ||
+                    especie.scientificname ||
+                    ""
+                ).toLowerCase();
+
+            return nome.includes(termo);
+
+        });
+
+    lista.pagina = 1;
+
+    renderizarLista(id);
+
+}
 
 
-    if (dados.salobra)
-        habitats.push("Água salobra");
+function mudarPagina(id, direcao) {
+
+    const lista =
+        listasEspecies[id];
+
+    if (!lista)
+        return;
+
+    const totalPaginas =
+        Math.max(
+            1,
+            Math.ceil(
+                lista.filtradas.length /
+                lista.porPagina
+            )
+        );
+
+    lista.pagina += direcao;
+
+    if (lista.pagina < 1)
+        lista.pagina = 1;
+
+    if (lista.pagina > totalPaginas)
+        lista.pagina = totalPaginas;
+
+    renderizarLista(id);
+
+}
 
 
-    if (dados.aguaDoce)
-        habitats.push("Água doce");
+function renderizarLista(id) {
 
+    const controle =
+        document.getElementById(id);
 
-    if (dados.terrestre)
-        habitats.push("Terrestre");
+    const lista =
+        listasEspecies[id];
 
+    if (!controle || !lista)
+        return;
 
-    return habitats.length
-        ? habitats.join(", ")
-        : "-";
+    const inicio =
+        (lista.pagina - 1) *
+        lista.porPagina;
+
+    const fim =
+        inicio +
+        lista.porPagina;
+
+    const especiesPagina =
+        lista.filtradas.slice(
+            inicio,
+            fim
+        );
+
+    const container =
+        controle.querySelector(
+            ".lista-especies"
+        );
+
+    container.innerHTML =
+        especiesPagina
+            .map(especie => {
+
+                const nome =
+                    especie.nome ||
+                    especie.scientificname ||
+                    "-";
+
+                const autoria =
+                    especie.autoria ||
+                    especie.authority ||
+                    "";
+
+                const status =
+                    especie.status ||
+                    "";
+
+                return `
+
+                    <div class="especie">
+
+                        <span class="especie-nome">
+                            ${escaparHTML(nome)}
+                        </span>
+
+                        <span class="especie-autoria">
+                            ${escaparHTML(
+                                autoria
+                            )}
+                        </span>
+
+                        ${
+                            status
+                                ? `
+                                    <span class="especie-status">
+                                        ${escaparHTML(
+                                            status
+                                        )}
+                                    </span>
+                                  `
+                                : ""
+                        }
+
+                    </div>
+
+                `;
+
+            })
+            .join("");
+
+    const totalPaginas =
+        Math.max(
+            1,
+            Math.ceil(
+                lista.filtradas.length /
+                lista.porPagina
+            )
+        );
+
+    const paginaInfo =
+        controle.querySelector(
+            ".pagina-info"
+        );
+
+    paginaInfo.textContent =
+        `Página ${lista.pagina} de ${totalPaginas} — ${lista.filtradas.length} espécies`;
+
+    controle.querySelector(
+        ".btn-anterior"
+    ).disabled =
+        lista.pagina <= 1;
+
+    controle.querySelector(
+        ".btn-proxima"
+    ).disabled =
+        lista.pagina >= totalPaginas;
 
 }
 
@@ -1511,26 +1425,19 @@ function habitatWorms(dados) {
 
 function cardEschmeyer(dados) {
 
-    console.log("ESCHMEYER RECEBEU:", dados);
-
     if (!dados || !dados.encontrado) {
 
         return `
 
             <div class="fonte">
 
-                <h3>Eschmeyer's Catalog of Fishes</h3>
+                <h3>
+                    Eschmeyer's Catalog of Fishes
+                </h3>
 
                 <span class="fonte-status status-incerto">
                     Não encontrado
                 </span>
-
-                <div class="fonte-info">
-
-                    Nenhum registro correspondente
-                    foi encontrado no catálogo de peixes.
-
-                </div>
 
             </div>
 
@@ -1538,111 +1445,10 @@ function cardEschmeyer(dados) {
 
     }
 
-
-    // -----------------------------------------------
-    // FAMÍLIA
-    // -----------------------------------------------
-
     if (dados.tipo === "familia") {
 
-
-        // Cria uma lista somente com espécies válidas
-        // encontradas nos registros do Eschmeyer
-
-        const especies = [];
-
-
-        if (dados.especies) {
-
-            dados.especies.forEach((especie) => {
-
-
-                if (!especie.status)
-                    return;
-
-
-                if (
-                    especie.status.startsWith("Valid as ")
-                ) {
-
-                    const nomeEspecie =
-                        especie.status
-                            .replace(
-                                "Valid as ",
-                                ""
-                            )
-                            .trim();
-
-
-                    if (
-                        nomeEspecie &&
-                        !especies.includes(nomeEspecie)
-                    ) {
-
-                        especies.push(nomeEspecie);
-
-                    }
-
-                }
-
-            });
-
-        }
-
-
-        let listaEspecies = "";
-
-
-        if (especies.length > 0) {
-
-            listaEspecies = `
-
-                <div class="fonte-info">
-
-                    <span class="fonte-label">
-                        Espécies:
-                    </span>
-
-                    <ul
-                        style="
-                            margin-top: 8px;
-                            padding-left: 20px;
-                        "
-                    >
-
-                        ${especies.map((especie) => `
-
-                            <li
-                                style="
-                                    margin-bottom: 6px;
-                                "
-                            >
-                                <i>${especie}</i>
-                            </li>
-
-                        `).join("")}
-
-                    </ul>
-
-                </div>
-
-            `;
-
-        } else {
-
-            listaEspecies = `
-
-                <div class="fonte-info">
-
-                    Nenhuma espécie válida
-                    foi identificada nos registros.
-
-                </div>
-
-            `;
-
-        }
-
+        const especies =
+            dados.especies || [];
 
         return `
 
@@ -1656,41 +1462,26 @@ function cardEschmeyer(dados) {
                     ✓ Família encontrada
                 </span>
 
+                ${info(
+                    "Família",
+                    `<i>${escaparHTML(dados.nome)}</i>`
+                )}
 
-                <div class="fonte-info">
+                ${info(
+                    "Espécies válidas",
+                    `<span class="badge-contagem">${especies.length}</span>`
+                )}
 
-                    <span class="fonte-label">
-                        Família:
-                    </span>
-
-                    <i>${dados.nome}</i>
-
-                </div>
-
-
-                <div class="fonte-info">
-
-                    <span class="fonte-label">
-                        Espécies encontradas:
-                    </span>
-
-                    ${especies.length}
-
-                </div>
-
-
-                ${listaEspecies}
+                ${criarListaEspecies(
+                    especies,
+                    "eschmeyer"
+                )}
 
             </div>
 
         `;
 
     }
-
-
-    // -----------------------------------------------
-    // VÁLIDO
-    // -----------------------------------------------
 
     if (dados.tipo === "valido") {
 
@@ -1706,49 +1497,26 @@ function cardEschmeyer(dados) {
                     ✓ Válido
                 </span>
 
+                ${info(
+                    "Status",
+                    escaparHTML(dados.status || "-")
+                )}
 
-                <div class="fonte-info">
+                ${info(
+                    "Família",
+                    escaparHTML(dados.familia || "-")
+                )}
 
-                    <span class="fonte-label">
-                        Status:
-                    </span>
-
-                    ${dados.status}
-
-                </div>
-
-
-                <div class="fonte-info">
-
-                    <span class="fonte-label">
-                        Família:
-                    </span>
-
-                    ${dados.familia || "-"}
-
-                </div>
-
-
-                <div class="fonte-info">
-
-                    <span class="fonte-label">
-                        Habitat:
-                    </span>
-
-                    ${dados.habitat || "-"}
-
-                </div>
+                ${info(
+                    "Habitat",
+                    escaparHTML(dados.habitat || "-")
+                )}
 
             </div>
 
         `;
 
     }
-
-
-    // -----------------------------------------------
-    // SINÔNIMO
-    // -----------------------------------------------
 
     if (dados.tipo === "sinonimo") {
 
@@ -1764,47 +1532,26 @@ function cardEschmeyer(dados) {
                     ⚠ Sinônimo
                 </span>
 
+                ${info(
+                    "Nome aceito",
+                    `<i>${escaparHTML(dados.nomeAceito || "-")}</i>`
+                )}
 
-                <div class="fonte-info">
+                ${info(
+                    "Família",
+                    escaparHTML(dados.familia || "-")
+                )}
 
-                    <span class="fonte-label">
-                        Nome aceito:
-                    </span>
-
-                    <i>
-                        ${dados.nomeAceito || "-"}
-                    </i>
-
-                </div>
-
-
-                <div class="fonte-info">
-
-                    <span class="fonte-label">
-                        Família:
-                    </span>
-
-                    ${dados.familia || "-"}
-
-                </div>
-
-
-                <div class="fonte-info">
-
-                    <span class="fonte-label">
-                        Habitat:
-                    </span>
-
-                    ${dados.habitat || "-"}
-
-                </div>
+                ${info(
+                    "Habitat",
+                    escaparHTML(dados.habitat || "-")
+                )}
 
             </div>
 
         `;
 
     }
-
 
     return `
 
@@ -1824,23 +1571,72 @@ function cardEschmeyer(dados) {
 
 }
 
+
+// =====================================================
+// INFORMAÇÃO
+// =====================================================
+
+function info(label, valor) {
+
+    return `
+
+        <div class="fonte-info">
+
+            <span class="fonte-label">
+                ${label}:
+            </span>
+
+            ${valor}
+
+        </div>
+
+    `;
+
+}
+
+
+// =====================================================
+// HABITAT WORMS
+// =====================================================
+
+function habitatWorms(dados) {
+
+    const habitats = [];
+
+    if (dados.marinho)
+        habitats.push("Marinho");
+
+    if (dados.salobra)
+        habitats.push("Água salobra");
+
+    if (dados.aguaDoce)
+        habitats.push("Água doce");
+
+    if (dados.terrestre)
+        habitats.push("Terrestre");
+
+    return habitats.length
+        ? habitats.join(", ")
+        : "-";
+
+}
+
+
 // =====================================================
 // WIKIPEDIA
 // =====================================================
 
 async function consultarWikipedia(nome) {
 
-
     const card =
-        document.getElementById("wikipediaCard");
-
+        document.getElementById(
+            "wikipediaCard"
+        );
 
     if (!card)
         return;
 
-
     try {
-
 
         const resposta =
             await fetch(
@@ -1849,14 +1645,14 @@ async function consultarWikipedia(nome) {
                 "&limit=1"
             );
 
-
         if (!resposta.ok)
-            throw new Error("Wikipedia HTTP " + resposta.status);
-
+            throw new Error(
+                "Wikipedia HTTP " +
+                resposta.status
+            );
 
         const dados =
             await resposta.json();
-
 
         if (
             !dados.pages ||
@@ -1864,36 +1660,28 @@ async function consultarWikipedia(nome) {
         ) {
 
             card.innerHTML = `
-
                 <h3>Wikipedia (English)</h3>
-
                 <span class="fonte-status status-incerto">
                     Não encontrado
                 </span>
-
                 <p>
                     Nenhuma página correspondente foi encontrada.
                 </p>
-
             `;
 
             return;
 
         }
 
-
         const pagina =
             dados.pages[0];
-
 
         const titulo =
             pagina.title;
 
-
         const descricao =
             pagina.description ||
             "Página relacionada ao táxon consultado.";
-
 
         const url =
             "https://en.wikipedia.org/wiki/" +
@@ -1901,17 +1689,18 @@ async function consultarWikipedia(nome) {
                 titulo.replace(/ /g, "_")
             );
 
-
         card.innerHTML = `
 
             <h3>Wikipedia (English)</h3>
 
             <p>
-                <strong>${titulo}</strong>
+                <strong>
+                    ${escaparHTML(titulo)}
+                </strong>
             </p>
 
             <p>
-                ${descricao}
+                ${escaparHTML(descricao)}
             </p>
 
             <a
@@ -1925,7 +1714,6 @@ async function consultarWikipedia(nome) {
 
         `;
 
-
     }
 
     catch (erro) {
@@ -1935,19 +1723,11 @@ async function consultarWikipedia(nome) {
             erro
         );
 
-
         card.innerHTML = `
-
             <h3>Wikipedia (English)</h3>
-
             <span class="fonte-status status-incerto">
                 Indisponível
             </span>
-
-            <p>
-                Não foi possível consultar a Wikipedia agora.
-            </p>
-
         `;
 
     }
@@ -1961,17 +1741,15 @@ async function consultarWikipedia(nome) {
 
 async function consultarWikispecies(nome) {
 
-
     const card =
-        document.getElementById("wikispeciesCard");
-
+        document.getElementById(
+            "wikispeciesCard"
+        );
 
     if (!card)
         return;
 
-
     try {
-
 
         const resposta =
             await fetch(
@@ -1980,16 +1758,14 @@ async function consultarWikispecies(nome) {
                 "&limit=1"
             );
 
-
         if (!resposta.ok)
             throw new Error(
-                "Wikispecies HTTP " + resposta.status
+                "Wikispecies HTTP " +
+                resposta.status
             );
-
 
         const dados =
             await resposta.json();
-
 
         if (
             !dados.pages ||
@@ -1997,31 +1773,24 @@ async function consultarWikispecies(nome) {
         ) {
 
             card.innerHTML = `
-
                 <h3>Wikispecies</h3>
-
                 <span class="fonte-status status-incerto">
                     Não encontrado
                 </span>
-
                 <p>
                     Nenhuma página correspondente foi encontrada.
                 </p>
-
             `;
 
             return;
 
         }
 
-
         const pagina =
             dados.pages[0];
 
-
         const titulo =
             pagina.title;
-
 
         const url =
             "https://species.wikimedia.org/wiki/" +
@@ -2029,18 +1798,18 @@ async function consultarWikispecies(nome) {
                 titulo.replace(/ /g, "_")
             );
 
-
         card.innerHTML = `
 
             <h3>Wikispecies</h3>
 
             <p>
-                <strong>${titulo}</strong>
+                <strong>
+                    ${escaparHTML(titulo)}
+                </strong>
             </p>
 
             <p>
-                Consulte a página taxonômica correspondente
-                no projeto Wikispecies.
+                Consulte a página taxonômica correspondente.
             </p>
 
             <a
@@ -2054,7 +1823,6 @@ async function consultarWikispecies(nome) {
 
         `;
 
-
     }
 
     catch (erro) {
@@ -2064,19 +1832,11 @@ async function consultarWikispecies(nome) {
             erro
         );
 
-
         card.innerHTML = `
-
             <h3>Wikispecies</h3>
-
             <span class="fonte-status status-incerto">
                 Indisponível
             </span>
-
-            <p>
-                Não foi possível consultar o Wikispecies agora.
-            </p>
-
         `;
 
     }
@@ -2090,84 +1850,75 @@ async function consultarWikispecies(nome) {
 
 function configurarPesquisasAcademicas(nome) {
 
-
     const termo =
         encodeURIComponent(nome);
 
-
     const scholar =
-        document.getElementById("linkScholar");
-
+        document.getElementById(
+            "linkScholar"
+        );
 
     const pubmed =
-        document.getElementById("linkPubMed");
-
+        document.getElementById(
+            "linkPubMed"
+        );
 
     const crossref =
-        document.getElementById("linkCrossref");
-
+        document.getElementById(
+            "linkCrossref"
+        );
 
     const google =
-        document.getElementById("linkGoogle");
+        document.getElementById(
+            "linkGoogle"
+        );
 
-
-    if (scholar) {
-
+    if (scholar)
         scholar.href =
             "https://scholar.google.com/scholar?q=" +
             termo;
 
-    }
-
-
-    if (pubmed) {
-
+    if (pubmed)
         pubmed.href =
             "https://pubmed.ncbi.nlm.nih.gov/?term=" +
             termo;
 
-    }
-
-
-    if (crossref) {
-
+    if (crossref)
         crossref.href =
             "https://search.crossref.org/?q=" +
             termo;
 
-    }
-
-
-    if (google) {
-
+    if (google)
         google.href =
             "https://www.google.com/search?q=" +
             termo +
             "+scientific+paper";
 
-    }
-
 }
 
 
 // =====================================================
-// ENTER PARA PESQUISAR
+// ENTER
 // =====================================================
 
 document
     .getElementById("campoBusca")
-    .addEventListener("keydown", function(event) {
+    .addEventListener(
+        "keydown",
+        function(event) {
 
-        if (event.key === "Enter") {
+            if (event.key === "Enter") {
 
-            consultarTaxon();
+                consultarTaxon();
+
+            }
 
         }
+    );
 
-    });
 
 // =====================================================
-// CARREGA TÁXON A PARTIR DA URL
+// URL /taxon/
 // =====================================================
 
 const partesURL =
@@ -2179,10 +1930,17 @@ if (
 ) {
 
     const nomeURL =
-        decodeURIComponent(partesURL.slice(2).join("/"));
+        decodeURIComponent(
+            partesURL
+                .slice(2)
+                .join("/")
+        );
 
-    document.getElementById("campoBusca").value =
-        nomeURL;
+    document
+        .getElementById(
+            "campoBusca"
+        )
+        .value = nomeURL;
 
     consultarTaxon();
 
@@ -2190,8 +1948,6 @@ if (
 
 </script>
 
-
 </body>
 
 </html>
-```
