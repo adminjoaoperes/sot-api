@@ -46,7 +46,6 @@ app.get("/api/taxon", async (req, res) => {
     let worms = null;
     let eschmeyer = null;
     let inaturalist = null;
-    let ncbi = null;
     let wikipedia = null;
     let wikispecies = null;
     let academico = null;
@@ -450,16 +449,98 @@ const registroAceito =
 
         };
 
-        // -----------------------------------------
-        // PROCESSA OS RESULTADOS
-        // -----------------------------------------
+// -----------------------------------------
+// PROCESSA OS RESULTADOS
+// -----------------------------------------
 
-        const registros =
-            usos.map(processarUso);
+const registros =
+    usos.map(processarUso);
 
-        // -----------------------------------------
-        // RESULTADO ÚNICO OU HOMÔNIMOS
-        // -----------------------------------------
+// -----------------------------------------
+// BUSCA OS FILHOS DIRETOS
+// -----------------------------------------
+
+for (let i = 0; i < usos.length; i++) {
+
+    const uso =
+        usos[i];
+
+    const id =
+        uso.id || null;
+
+    registros[i].filhosDiretos = {
+
+        encontrado: false,
+
+        total: 0,
+
+        resultados: []
+
+    };
+
+    if (!id) {
+        continue;
+    }
+
+    try {
+
+        const urlFilhos =
+            `https://api.checklistbank.org/dataset/3LR/tree/${encodeURIComponent(id)}/children`;
+
+        const respostaFilhos =
+            await fetch(urlFilhos);
+
+        if (!respostaFilhos.ok) {
+            continue;
+        }
+
+        const dadosFilhos =
+            await respostaFilhos.json();
+
+        const filhos =
+            Array.isArray(dadosFilhos.result)
+                ? dadosFilhos.result
+                : [];
+
+        registros[i].filhosDiretos = {
+
+            encontrado: filhos.length > 0,
+
+            total: filhos.length,
+
+            resultados:
+                filhos.map(filho => ({
+
+                    id:
+                        filho.id || null,
+
+                    nome:
+                        filho.name || null,
+
+                    categoria:
+                        filho.rank || null,
+
+                    autoria:
+                        filho.authorship || null
+
+                }))
+
+        };
+
+    } catch (erroFilhos) {
+
+        console.error(
+            "Erro ao consultar filhos diretos do ChecklistBank:",
+            erroFilhos
+        );
+
+    }
+
+}
+
+// -----------------------------------------
+// RESULTADO ÚNICO OU HOMÔNIMOS
+// -----------------------------------------
 
         if (registros.length === 1) {
 
@@ -635,38 +716,144 @@ try {
             };
         };
 
-    if (registrosExatos.length === 1) {
+if (registrosExatos.length === 1) {
 
-        worms = {
+    const registroPrincipal =
+        registrosExatos[0];
 
-            encontrado: true,
+    const resultadoPrincipal =
+        processarWorms(registroPrincipal);
 
-            ...processarWorms(
-                registrosExatos[0]
-            )
-        };
+    // -----------------------------------------
+    // BUSCA OS FILHOS DIRETOS
+    // -----------------------------------------
 
-    } else if (registrosExatos.length > 1) {
+    let filhosDiretos = {
 
-        worms = {
+        encontrado: false,
 
-            encontrado: true,
+        total: 0,
 
-            homonimos: true,
+        resultados: []
 
-            resultados:
-                registrosExatos.map(
-                    processarWorms
-                )
-        };
+    };
 
-    } else {
+    // Só busca filhos para um registro válido
+    if (
+        registroPrincipal.status === "accepted" &&
+        registroPrincipal.AphiaID
+    ) {
 
-        worms = {
+        try {
 
-            encontrado: false
-        };
+            const urlFilhosWorms =
+                `https://www.marinespecies.org/rest/AphiaChildrenByAphiaID/${registroPrincipal.AphiaID}`;
+
+            const respostaFilhosWorms =
+                await fetch(urlFilhosWorms);
+
+            if (respostaFilhosWorms.ok) {
+
+                const dadosFilhosWorms =
+                    await respostaFilhosWorms.json();
+
+                const filhosAceitos =
+                    Array.isArray(dadosFilhosWorms)
+                        ? dadosFilhosWorms.filter(
+                            filho =>
+                                filho.status === "accepted"
+                        )
+                        : [];
+
+                filhosDiretos = {
+
+                    encontrado:
+                        filhosAceitos.length > 0,
+
+                    total:
+                        filhosAceitos.length,
+
+                    resultados:
+                        filhosAceitos.map(
+                            filho => ({
+
+                                aphiaID:
+                                    filho.AphiaID || null,
+
+                                nome:
+                                    filho.scientificname || null,
+
+                                categoria:
+                                    filho.rank || null,
+
+                                autoria:
+                                    filho.authority || null
+
+                            })
+                        )
+
+                };
+
+            }
+
+        } catch (erroFilhosWorms) {
+
+            console.error(
+                "Erro ao consultar filhos diretos do WoRMS:",
+                erroFilhosWorms
+            );
+
+        }
+
     }
+
+    worms = {
+
+        encontrado: true,
+
+        ...resultadoPrincipal,
+
+        filhosDiretos:
+            filhosDiretos
+
+    };
+
+} else if (registrosExatos.length > 1) {
+
+    worms = {
+
+        encontrado: true,
+
+        homonimos: true,
+
+        resultados:
+            registrosExatos.map(
+                registro => ({
+
+                    ...processarWorms(registro),
+
+                    filhosDiretos: {
+
+                        encontrado: false,
+
+                        total: 0,
+
+                        resultados: []
+
+                    }
+
+                })
+            )
+
+    };
+
+} else {
+
+    worms = {
+
+        encontrado: false
+    };
+}
 
 } catch (erroWorms) {
 
@@ -684,460 +871,1114 @@ try {
     };
 }
 
-  // =====================================================
+// =====================================================
 // ESCHMEYER
 // =====================================================
 
 try {
 
-    const partes =
-        nome.trim().split(/\s+/);
-
-// =================================================
-// FAMÍLIA
-// =================================================
-
-if (
-    partes.length === 1 &&
-    nome.toLowerCase().endsWith("idae")
-) {
-
-    const familia =
+    const nomePesquisado =
         nome.trim();
 
+    const nomeNormalizado =
+        nomePesquisado.toLowerCase();
 
-    const urlEschmeyerFamilias =
-        "https://researcharchive.calacademy.org/research/ichthyology/catalog/SpeciesByFamily.asp";
+    const partesNome =
+        nomePesquisado.split(/\s+/);
 
+    // =================================================
+    // FUNÇÕES AUXILIARES
+    // =================================================
 
-    const respostaEschmeyer =
-        await fetch(urlEschmeyerFamilias);
+    function limparHtml(texto) {
 
-
-    const html =
-        await respostaEschmeyer.text();
-
-
-    // -------------------------------------------------
-    // Divide a página em linhas da tabela
-    // -------------------------------------------------
-
-    const linhas =
-        html.match(/<tr[\s\S]*?<\/tr>/gi);
-
-
-    let ordemEncontrada = null;
-
-    let familiaEncontrada = null;
-
-
-    if (linhas) {
-
-        for (const linha of linhas) {
-
-            const textoLinha =
-                linha
-                    .replace(/<[^>]*>/g, " ")
-                    .replace(/&nbsp;/g, " ")
-                    .replace(/&amp;/g, "&")
-                    .replace(/\s+/g, " ")
-                    .trim();
-
-
-            // -----------------------------------------
-            // Procura a família
-            // -----------------------------------------
-
-            const regexFamilia =
-                new RegExp(
-                    `\\b${familia}\\b`,
-                    "i"
-                );
-
-
-          if (regexFamilia.test(textoLinha)) {
-
-    familiaEncontrada =
-        familia;
-
-// -------------------------------------
-// Procura a ordem nas linhas anteriores
-// -------------------------------------
-
-const indiceFamilia =
-    linhas.indexOf(linha);
-
-
-for (
-    let i = indiceFamilia - 1;
-    i >= 0 && i >= indiceFamilia - 10;
-    i--
-) {
-
-    const textoLinhaAnterior =
-        linhas[i]
+        return texto
             .replace(/<[^>]*>/g, " ")
             .replace(/&nbsp;/g, " ")
             .replace(/&amp;/g, "&")
+            .replace(/&bull;/g, "•")
+            .replace(/&#233;/g, "é")
+            .replace(/&#234;/g, "ê")
+            .replace(/&#225;/g, "á")
+            .replace(/&#243;/g, "ó")
+            .replace(/&#231;/g, "ç")
+            .replace(/&#269;/g, "č")
+            .replace(/&#263;/g, "ć")
+            .replace(/&#268;/g, "Č")
+            .replace(/&#252;/g, "ü")
+            .replace(/&#241;/g, "ñ")
+            .replace(/&#355;/g, "ţ")
             .replace(/\s+/g, " ")
             .trim();
 
-
-    const ordemMatch =
-        textoLinhaAnterior.match(
-            /\b([A-Z][A-Za-z-]+iformes)\b/
-        );
-
-
-    if (ordemMatch) {
-
-        ordemEncontrada =
-            ordemMatch[1];
-
-        break;
-
     }
 
-}
-   
-    break;
 
-}
+    function normalizarNome(texto) {
 
-        }
+        return texto
+            .trim()
+            .toLowerCase();
 
     }
 
 
-    // -------------------------------------------------
-    // Resultado
-    // -------------------------------------------------
+    function criarFilhosVazios() {
 
-    if (familiaEncontrada) {
-
-        eschmeyer = {
-
-            encontrado: true,
-
-            tipo: "familia",
-
-            nome:
-                familiaEncontrada,
-
-            familia:
-                familiaEncontrada,
-
-            ordem:
-                ordemEncontrada
-
-        };
-
-
-    } else {
-
-        eschmeyer = {
+        return {
 
             encontrado: false,
 
-            tipo: "familia",
+            total: 0,
 
-            nome:
-                familia,
-
-            motivo:
-                "Família não encontrada na classificação do Eschmeyer."
+            resultados: []
 
         };
 
-    }       
+    }
 
-// =================================================
-    // ESPÉCIE
+
+    function criarFilhos(resultados) {
+
+        return {
+
+            encontrado:
+                resultados.length > 0,
+
+            total:
+                resultados.length,
+
+            resultados:
+                resultados
+
+        };
+
+    }
+
+
+    // =================================================
+    // CONSULTA A CLASSIFICAÇÃO OFICIAL
     // =================================================
 
-    } else if (partes.length >= 2) {
+async function obterClassificacaoEschmeyer() {
 
-        const genero =
-            partes[0];
+    const urlClassificacao =
+        "https://www.calacademy.org/eschmeyers-catalog-of-fishes-classification";
 
-        const especie =
-            partes[1];
+    const resposta =
+        await fetch(urlClassificacao);
 
+    if (!resposta.ok) {
 
-        const urlEschmeyer =
-            `https://researcharchive.calacademy.org/research/ichthyology/catalog/fishcatget.asp?tbl=species&genus=${encodeURIComponent(genero)}&species=${encodeURIComponent(especie)}`;
+        return [];
 
+    }
 
-        const respostaEschmeyer =
-            await fetch(urlEschmeyer);
-
-
-        const html =
-            await respostaEschmeyer.text();
+    const html =
+        await resposta.text();
 
 
-        const registros =
-            html.match(
-                /<p class="result"[\s\S]*?<\/p>/g
+    // -------------------------------------------------
+    // Localiza todos os itens <li> da classificação
+    // -------------------------------------------------
+
+    const itens =
+        html.match(
+            /<li\b[^>]*>[\s\S]*?<\/li>/gi
+        );
+
+
+    if (!itens) {
+
+        return [];
+
+    }
+
+
+    const resultados = [];
+
+
+    // -------------------------------------------------
+    // Converte cada item em um registro taxonômico
+    // -------------------------------------------------
+
+    for (const item of itens) {
+
+        const texto =
+            limparHtml(item);
+
+
+        // ---------------------------------------------
+        // Identifica o rank
+        // ---------------------------------------------
+
+        const rankMatch =
+            texto.match(
+                /(?:^|\s)(Class|Order|Suborder|Family|Subfamily)\s+/i
             );
 
 
-        if (registros) {
+        if (!rankMatch) {
 
-            const resultados = [];
+            continue;
 
-
-            registros.forEach(registro => {
-
-                const idMatch =
-                    registro.match(
-                        /spid="(\d+)"/
-                    );
+        }
 
 
-                const id =
-                    idMatch
-                        ? idMatch[1]
-                        : null;
+        const rank =
+            rankMatch[1].toLowerCase();
 
 
-                const texto =
-                    registro
-                        .replace(/<[^>]*>/g, " ")
-                        .replace(/&bull;/g, "•")
-                        .replace(/&amp;/g, "&")
-                        .replace(/&#233;/g, "é")
-                        .replace(/&#234;/g, "ê")
-                        .replace(/&#225;/g, "á")
-                        .replace(/&#243;/g, "ó")
-                        .replace(/&#231;/g, "ç")
-                        .replace(/&#269;/g, "č")
-                        .replace(/&#263;/g, "ć")
-                        .replace(/&#268;/g, "Č")
-                        .replace(/&#252;/g, "ü")
-                        .replace(/&#241;/g, "ñ")
-                        .replace(/&#355;/g, "ţ")
-                        .replace(/\s+/g, " ")
-                        .trim();
+        // ---------------------------------------------
+        // Remove o rank
+        // ---------------------------------------------
+
+        const restante =
+            texto
+                .replace(
+                    /.*?(Class|Order|Suborder|Family|Subfamily)\s+/i,
+                    ""
+                )
+                .trim();
 
 
-                const statusMatch =
-                    texto.match(
-                        /Current status:\s*(.*?)(?:\.\s+[A-Z][A-Za-z]+idae(?::\s+[A-Z][A-Za-z]+)?\.)/
-                    );
+        // ---------------------------------------------
+        // O nome do táxon aparece antes da autoria
+        // ou da descrição entre parênteses.
+        // ---------------------------------------------
+
+        const nomeMatch =
+            restante.match(
+                /^("[^"]+"|[A-Z][A-Za-z-]*(?:\s+clade)?)/ 
+            );
 
 
-                const status =
-                    statusMatch
-                        ? statusMatch[1].trim()
-                        : null;
+        if (!nomeMatch) {
+
+            continue;
+
+        }
 
 
-                const familiaMatch =
-                    texto.match(
-                        /Current status:.*?\.\s+([A-Z][A-Za-z]+idae)(?::\s+[A-Z][A-Za-z]+)?\./
-                    );
+        const nomeTaxon =
+            nomeMatch[1].trim();
 
 
-                const familia =
-                    familiaMatch
-                        ? familiaMatch[1]
-                        : null;
+        resultados.push({
+
+            nome:
+                nomeTaxon,
+
+            rank:
+                rank,
+
+            paiTaxon:
+                null
+
+        });
+
+    }
 
 
-                const habitatMatch =
-                    texto.match(
-                        /Habitat:\s*(.*?)(?:\.|$)/
-                    );
+    // -------------------------------------------------
+    // Reconstrói a hierarquia
+    // -------------------------------------------------
 
+    const ordemRanks = {
 
-                const habitat =
-                    habitatMatch
-                        ? habitatMatch[1]
-                        : null;
+        class: 1,
 
+        order: 2,
 
-                let nomeAceito = null;
+        suborder: 3,
 
+        family: 4,
 
-                if (
-                    status &&
-                    status.startsWith("Synonym of ")
-                ) {
-
-                    nomeAceito =
-                        status
-                            .replace(
-                                "Synonym of ",
-                                ""
-                            )
-                            .trim();
-
-                }
-
-
-                resultados.push({
-
-                    id:
-                        id,
-
-                    nome:
-                        nome,
-
-                    status:
-                        status,
-
-                    nomeAceito:
-                        nomeAceito,
-
-                    familia:
-                        familia,
-
-                    habitat:
-                        habitat
-
-                });
-
-            });
-
-
-            const registroValido =
-                resultados.find(
-                    registro =>
-                        registro.status &&
-                        registro.status.startsWith(
-                            "Valid as "
-                        )
-                );
-
-if (registroValido) {
-
-    const nomeDepoisValidAs =
-        registroValido.status
-            .replace("Valid as ", "")
-            .trim();
-
-    const ehSinonimo =
-        nomeDepoisValidAs.toLowerCase() !==
-        nome.toLowerCase();
-
-    eschmeyer = {
-
-        encontrado: true,
-
-        tipo:
-            ehSinonimo
-                ? "sinonimo"
-                : "valido",
-
-        id:
-            registroValido.id,
-
-        nome:
-            registroValido.nome,
-
-        status:
-            registroValido.status,
-
-        nomeAceito:
-            ehSinonimo
-                ? nomeDepoisValidAs
-                : null,
-
-        familia:
-            registroValido.familia,
-
-        habitat:
-            registroValido.habitat
+        subfamily: 5
 
     };
 
 
-            } else {
+    const pilha =
+        [];
 
 
-                const registroSinonimo =
-                    resultados.find(
-                        registro =>
-                            registro.status &&
-                            registro.status.startsWith(
-                                "Synonym of "
-                            )
-                    );
+    for (const registro of resultados) {
+
+        const nivel =
+            ordemRanks[registro.rank];
 
 
-                if (registroSinonimo) {
+        if (!nivel) {
 
-                    eschmeyer = {
+            continue;
 
-                        encontrado: true,
-
-                        tipo: "sinonimo",
-
-                        id:
-                            registroSinonimo.id,
-
-                        nome:
-                            registroSinonimo.nome,
-
-                        status:
-                            registroSinonimo.status,
-
-                        nomeAceito:
-                            registroSinonimo.nomeAceito,
-
-                        familia:
-                            registroSinonimo.familia,
-
-                        habitat:
-                            registroSinonimo.habitat
-
-                    };
+        }
 
 
-                } else {
+        while (
+            pilha.length > 0 &&
+            ordemRanks[
+                pilha[pilha.length - 1].rank
+            ] >= nivel
+        ) {
 
-                    eschmeyer = {
+            pilha.pop();
 
-                        encontrado: true,
+        }
 
-                        tipo: "incerto",
 
-                        resultados:
-                            resultados
+        registro.paiTaxon =
+            pilha.length > 0
+                ? pilha[pilha.length - 1]
+                : null;
 
-                    };
 
-                }
+        pilha.push(registro);
+
+    }
+
+
+    return resultados;
+
+}
+    
+    // =================================================
+    // CONSULTA DE GÊNEROS
+    // =================================================
+
+    async function obterGenerosEschmeyer(nomeGrupo) {
+
+        const urlGeneros =
+            `https://researcharchive.calacademy.org/research/ichthyology/catalog/fishcatget.asp?tbl=genus&family=${encodeURIComponent(nomeGrupo)}`;
+
+        const resposta =
+            await fetch(urlGeneros);
+
+        if (!resposta.ok) {
+
+            return [];
+
+        }
+
+
+        const html =
+            await resposta.text();
+
+
+        const registros =
+            html.match(
+                /<p class="result"[\s\S]*?<\/p>/gi
+            );
+
+
+        if (!registros) {
+
+            return [];
+
+        }
+
+
+        const resultados = [];
+
+
+        for (const registro of registros) {
+
+            const texto =
+                limparHtml(registro);
+
+
+            /*
+             * Somente gêneros válidos entram nos
+             * filhos diretos.
+             */
+
+            const statusMatch =
+                texto.match(
+                    /Current status:\s*(.*?)(?:\.\s+Labridae:|\.\s+[A-Z][A-Za-z-]+idae:|$)/i
+                );
+
+
+            const status =
+                statusMatch
+                    ? statusMatch[1].trim()
+                    : null;
+
+
+            if (
+                !status ||
+                !status.startsWith("Valid as ")
+            ) {
+
+                continue;
 
             }
 
 
-        } else {
+            const nomeMatch =
+                status.match(
+                    /^Valid as\s+([A-Z][A-Za-z-]*)/i
+                );
 
-            eschmeyer = {
 
-                encontrado: false
+            if (!nomeMatch) {
+                continue;
+            }
+
+
+            const nomeGenero =
+                nomeMatch[1];
+
+
+            const genidMatch =
+                registro.match(
+                    /genid="(\d+)"/i
+                );
+
+
+            const id =
+                genidMatch
+                    ? genidMatch[1]
+                    : null;
+
+
+            resultados.push({
+
+                id:
+                    id,
+
+                nome:
+                    nomeGenero,
+
+                categoria:
+                    "genus",
+
+                autoria:
+                    null
+
+            });
+
+        }
+
+
+        // ---------------------------------------------
+        // Remove duplicidades
+        // ---------------------------------------------
+
+        const unicos = [];
+
+
+        for (const resultado of resultados) {
+
+            if (
+                !unicos.some(
+                    item =>
+                        normalizarNome(item.nome) ===
+                        normalizarNome(resultado.nome)
+                )
+            ) {
+
+                unicos.push(resultado);
+
+            }
+
+        }
+
+
+        return unicos;
+
+    }
+
+
+    // =================================================
+    // CONSULTA DE ESPÉCIES
+    // =================================================
+
+    async function obterEspeciesEschmeyer(nomeGenero) {
+
+        const urlEspecies =
+            `https://researcharchive.calacademy.org/research/ichthyology/catalog/fishcatget.asp?tbl=species&genus=${encodeURIComponent(nomeGenero)}`;
+
+
+        const resposta =
+            await fetch(urlEspecies);
+
+
+        if (!resposta.ok) {
+
+            return [];
+
+        }
+
+
+        const html =
+            await resposta.text();
+
+
+        const registros =
+            html.match(
+                /<p class="result"[\s\S]*?<\/p>/gi
+            );
+
+
+        if (!registros) {
+
+            return [];
+
+        }
+
+
+        const resultados = [];
+
+
+        for (const registro of registros) {
+
+            const texto =
+                limparHtml(registro);
+
+
+            const statusMatch =
+                texto.match(
+                    /Current status:\s*(.*?)(?:\.\s+[A-Z][A-Za-z-]+idae(?::\s+[A-Z][A-Za-z-]+)?\.)/i
+                );
+
+
+            const status =
+                statusMatch
+                    ? statusMatch[1].trim()
+                    : null;
+
+
+            /*
+             * Só nomes atualmente válidos entram
+             * como filhos diretos.
+             */
+
+            if (
+                !status ||
+                !status.startsWith("Valid as ")
+            ) {
+
+                continue;
+
+            }
+
+
+            const nomeValidoMatch =
+                status.match(
+                    /^Valid as\s+([A-Z][A-Za-z-]+\s+[a-z][A-Za-z-]+)/i
+                );
+
+
+            if (!nomeValidoMatch) {
+                continue;
+            }
+
+
+            const nomeEspecie =
+                nomeValidoMatch[1];
+
+
+            const idMatch =
+                registro.match(
+                    /spid="(\d+)"/i
+                );
+
+
+            const id =
+                idMatch
+                    ? idMatch[1]
+                    : null;
+
+
+            const familiaMatch =
+                texto.match(
+                    /\b([A-Z][A-Za-z-]+idae)\s*:/i
+                );
+
+
+            const familia =
+                familiaMatch
+                    ? familiaMatch[1]
+                    : null;
+
+
+            const habitatMatch =
+                texto.match(
+                    /Habitat:\s*(.*?)(?:\.|$)/i
+                );
+
+
+            const habitat =
+                habitatMatch
+                    ? habitatMatch[1]
+                    : null;
+
+
+            resultados.push({
+
+                id:
+                    id,
+
+                nome:
+                    nomeEspecie,
+
+                categoria:
+                    "species",
+
+                autoria:
+                    null,
+
+                familia:
+                    familia,
+
+                habitat:
+                    habitat
+
+            });
+
+        }
+
+
+        const unicos = [];
+
+
+        for (const resultado of resultados) {
+
+            if (
+                !unicos.some(
+                    item =>
+                        normalizarNome(item.nome) ===
+                        normalizarNome(resultado.nome)
+                )
+            ) {
+
+                unicos.push(resultado);
+
+            }
+
+        }
+
+
+        return unicos;
+
+    }
+
+
+    // =================================================
+    // IDENTIFICAÇÃO DE ESPÉCIE / SINÔNIMO
+    // =================================================
+
+    async function consultarEspecieEschmeyer(
+        nomeCompleto
+    ) {
+
+        const partesNome =
+            nomeCompleto.split(/\s+/);
+
+
+        if (partesNome.length < 2) {
+
+            return null;
+
+        }
+
+
+        const genero =
+            partesNome[0];
+
+
+        const especie =
+            partesNome[1];
+
+
+        const urlEspecie =
+            `https://researcharchive.calacademy.org/research/ichthyology/catalog/fishcatget.asp?tbl=species&genus=${encodeURIComponent(genero)}&species=${encodeURIComponent(especie)}`;
+
+
+        const resposta =
+            await fetch(urlEspecie);
+
+
+        if (!resposta.ok) {
+
+            return null;
+
+        }
+
+
+        const html =
+            await resposta.text();
+
+
+        const registros =
+            html.match(
+                /<p class="result"[\s\S]*?<\/p>/gi
+            );
+
+
+        if (!registros) {
+
+            return null;
+
+        }
+
+
+        const resultados = [];
+
+
+        for (const registro of registros) {
+
+            const texto =
+                limparHtml(registro);
+
+
+            const idMatch =
+                registro.match(
+                    /spid="(\d+)"/i
+                );
+
+
+            const id =
+                idMatch
+                    ? idMatch[1]
+                    : null;
+
+
+            const statusMatch =
+                texto.match(
+                    /Current status:\s*(.*?)(?:\.\s+[A-Z][A-Za-z-]+idae(?::\s+[A-Z][A-Za-z-]+)?\.)/i
+                );
+
+
+            const status =
+                statusMatch
+                    ? statusMatch[1].trim()
+                    : null;
+
+
+            const familiaMatch =
+                texto.match(
+                    /Current status:.*?\.\s+([A-Z][A-Za-z-]+idae)(?::\s+[A-Z][A-Za-z-]+)?\./i
+                );
+
+
+            const familia =
+                familiaMatch
+                    ? familiaMatch[1]
+                    : null;
+
+
+            const habitatMatch =
+                texto.match(
+                    /Habitat:\s*(.*?)(?:\.|$)/i
+                );
+
+
+            const habitat =
+                habitatMatch
+                    ? habitatMatch[1]
+                    : null;
+
+
+            let nomeAceito = null;
+
+
+            if (
+                status &&
+                status.startsWith("Synonym of ")
+            ) {
+
+                nomeAceito =
+                    status
+                        .replace(
+                            "Synonym of ",
+                            ""
+                        )
+                        .trim();
+
+            }
+
+
+            resultados.push({
+
+                id:
+                    id,
+
+                nome:
+                    nomeCompleto,
+
+                status:
+                    status,
+
+                nomeAceito:
+                    nomeAceito,
+
+                familia:
+                    familia,
+
+                habitat:
+                    habitat
+
+            });
+
+        }
+
+
+        const registroValido =
+            resultados.find(
+                registro =>
+                    registro.status &&
+                    registro.status.startsWith(
+                        "Valid as "
+                    )
+            );
+
+
+        if (registroValido) {
+
+const nomeDepoisValidAs =
+    registroValido.status
+        .replace(
+            "Valid as ",
+            ""
+        )
+        .trim();
+
+
+const nomeAceitoMatch =
+    nomeDepoisValidAs.match(
+        /^([A-Z][A-Za-z-]+\s+[a-z][A-Za-z-]+)/
+    );
+
+
+const nomeTaxonomicoAceito =
+    nomeAceitoMatch
+        ? nomeAceitoMatch[1]
+        : nomeDepoisValidAs;
+
+
+const ehSinonimo =
+    normalizarNome(
+        nomeTaxonomicoAceito
+    ) !==
+    normalizarNome(
+        nomeCompleto
+    );
+
+
+            return {
+
+                encontrado: true,
+
+                tipo:
+                    ehSinonimo
+                        ? "sinonimo"
+                        : "valido",
+
+                categoria:
+                    "species",
+
+                id:
+                    registroValido.id,
+
+                nome:
+                    registroValido.nome,
+
+                status:
+                    registroValido.status,
+
+		nomeAceito:
+    			ehSinonimo
+        		? nomeTaxonomicoAceito
+        		: null,
+
+                familia:
+                    registroValido.familia,
+
+                habitat:
+                    registroValido.habitat
 
             };
 
         }
 
 
+        const registroSinonimo =
+            resultados.find(
+                registro =>
+                    registro.status &&
+                    registro.status.startsWith(
+                        "Synonym of "
+                    )
+            );
+
+
+        if (registroSinonimo) {
+
+            return {
+
+                encontrado: true,
+
+                tipo:
+                    "sinonimo",
+
+                categoria:
+                    "species",
+
+                id:
+                    registroSinonimo.id,
+
+                nome:
+                    registroSinonimo.nome,
+
+                status:
+                    registroSinonimo.status,
+
+                nomeAceito:
+                    registroSinonimo.nomeAceito,
+
+                familia:
+                    registroSinonimo.familia,
+
+                habitat:
+                    registroSinonimo.habitat
+
+            };
+
+        }
+
+
+        return {
+
+            encontrado: true,
+
+            tipo:
+                "incerto",
+
+            categoria:
+                "species",
+
+            resultados:
+                resultados
+
+        };
+
+    }
+
+
     // =================================================
-    // OUTROS RANKS
+    // BUSCA A CLASSIFICAÇÃO
     // =================================================
 
-    } else {
+    const classificacao =
+        await obterClassificacaoEschmeyer();
+
+
+    // =================================================
+    // PROCURA O TÁXON NA CLASSIFICAÇÃO
+    // =================================================
+
+    const registroClassificacao =
+        classificacao.find(
+            registro =>
+                normalizarNome(registro.nome) ===
+                nomeNormalizado
+        );
+
+
+    // =================================================
+    // TÁXON ENCONTRADO NA CLASSIFICAÇÃO
+    // =================================================
+
+    if (registroClassificacao) {
+
+        const rank =
+            registroClassificacao.rank;
+
+
+        const filhos =
+            classificacao.filter(
+                registro =>
+                    registro.paiTaxon ===
+                    registroClassificacao
+            );
+
+
+        let filhosDiretos =
+            [];
+
+
+        // ---------------------------------------------
+        // Filhos da classificação superior
+        // ---------------------------------------------
+
+        if (
+            filhos.length > 0
+        ) {
+
+            filhosDiretos =
+                filhos.map(
+                    filho => ({
+
+                        id:
+                            null,
+
+                        nome:
+                            filho.nome,
+
+                        categoria:
+                            filho.rank,
+
+                        autoria:
+                            null
+
+                    })
+                );
+
+        }
+
+
+        // ---------------------------------------------
+        // Se o táxon é família ou subfamília e não
+        // possui filhos na classificação, procuramos
+        // os gêneros diretamente associados.
+        // ---------------------------------------------
+
+        if (
+            filhosDiretos.length === 0 &&
+            (
+                rank === "family" ||
+                rank === "subfamily"
+            )
+        ) {
+
+            filhosDiretos =
+                await obterGenerosEschmeyer(
+                    nomePesquisado
+                );
+
+        }
+
 
         eschmeyer = {
 
-            encontrado: false,
+            encontrado: true,
 
-            motivo:
-                "O Eschmeyer não possui consulta direta para este rank."
+            tipo:
+                "valido",
+
+            categoria:
+                rank,
+
+            nome:
+                registroClassificacao.nome,
+
+            filhosDiretos:
+                criarFilhos(
+                    filhosDiretos
+                )
 
         };
+
+
+    } else {
+
+        // =================================================
+        // NÃO ENCONTRADO NA CLASSIFICAÇÃO:
+        // TENTAMOS COMO GÊNERO
+        // =================================================
+
+        if (
+            partesNome &&
+            partesNome.length === 1
+        ) {
+
+            const especiesGenero =
+                await obterEspeciesEschmeyer(
+                    nomePesquisado
+                );
+
+
+            if (
+                especiesGenero.length > 0
+            ) {
+
+                eschmeyer = {
+
+                    encontrado: true,
+
+                    tipo:
+                        "valido",
+
+                    categoria:
+                        "genus",
+
+                    nome:
+                        nomePesquisado,
+
+                    filhosDiretos:
+                        criarFilhos(
+                            especiesGenero
+                        )
+
+                };
+
+            } else {
+
+                eschmeyer = {
+
+                    encontrado: false,
+
+                    nome:
+                        nomePesquisado
+
+                };
+
+            }
+
+        } else {
+
+            // =================================================
+            // TENTAMOS COMO ESPÉCIE
+            // =================================================
+
+            const resultadoEspecie =
+                await consultarEspecieEschmeyer(
+                    nomePesquisado
+                );
+
+
+            if (resultadoEspecie) {
+
+                /*
+                 * Espécies não possuem, normalmente,
+                 * filhos taxonômicos utilizados pelo
+                 * catálogo.
+                 *
+                 * Portanto retornamos estrutura vazia.
+                 */
+
+                eschmeyer = {
+
+                    ...resultadoEspecie,
+
+                    filhosDiretos:
+                        criarFilhosVazios()
+
+                };
+
+            } else {
+
+                eschmeyer = {
+
+                    encontrado: false
+
+                };
+
+            }
+
+        }
 
     }
 
@@ -1256,18 +2097,181 @@ try {
             };
         };
 
+    // -------------------------------------------------
+    // Busca os filhos diretos do táxon
+    // -------------------------------------------------
+
+    const obterFilhosDiretosINaturalist =
+        async (taxon) => {
+
+            if (!taxon?.id) {
+
+                return {
+
+                    encontrado: false,
+
+                    total: 0,
+
+                    resultados: []
+
+                };
+
+            }
+
+            try {
+
+                const urlTaxonINaturalist =
+                    `https://api.inaturalist.org/v1/taxa/${taxon.id}`;
+
+                const respostaTaxonINaturalist =
+                    await fetch(
+                        urlTaxonINaturalist
+                    );
+
+                if (!respostaTaxonINaturalist.ok) {
+
+                    return {
+
+                        encontrado: false,
+
+                        total: 0,
+
+                        resultados: []
+
+                    };
+
+                }
+
+                const dadosTaxonINaturalist =
+                    await respostaTaxonINaturalist.json();
+
+const taxonDetalhado =
+    Array.isArray(
+        dadosTaxonINaturalist.results
+    )
+        ? dadosTaxonINaturalist.results[0]
+        : null;
+
+const filhos =
+    Array.isArray(
+        taxonDetalhado?.children
+    )
+        ? taxonDetalhado.children
+        : [];
+
+                // Mantém SOMENTE os filhos cujo
+                // pai imediato é o táxon pesquisado
+                const filhosDiretos =
+                    filhos.filter(
+                        filho =>
+                            filho.parent_id ===
+                            taxon.id
+                    );
+
+                return {
+
+                    encontrado:
+                        filhosDiretos.length > 0,
+
+                    total:
+                        filhosDiretos.length,
+
+                    resultados:
+                        filhosDiretos.map(
+                            filho => ({
+
+                                id:
+                                    filho.id || null,
+
+                                nome:
+                                    filho.name || null,
+
+                                categoria:
+                                    filho.rank || null,
+
+                                nomeComum:
+                                    filho.preferred_common_name ||
+                                    null
+
+                            })
+                        )
+
+                };
+
+            } catch (erroFilhosINaturalist) {
+
+                console.error(
+                    "Erro ao consultar filhos diretos do iNaturalist:",
+                    erroFilhosINaturalist
+                );
+
+                return {
+
+                    encontrado: false,
+
+                    total: 0,
+
+                    resultados: []
+
+                };
+
+            }
+
+        };
+
+
     if (resultadosExatos.length === 1) {
+
+        const resultadoPrincipal =
+            processarINaturalist(
+                resultadosExatos[0]
+            );
+
+        const filhosDiretos =
+            await obterFilhosDiretosINaturalist(
+                resultadosExatos[0]
+            );
 
         inaturalist = {
 
             encontrado: true,
 
-            ...processarINaturalist(
-                resultadosExatos[0]
-            )
+            ...resultadoPrincipal,
+
+            filhosDiretos:
+                filhosDiretos
+
         };
 
     } else if (resultadosExatos.length > 1) {
+
+        const resultadosHomonimos =
+            [];
+
+        for (
+            const taxon of resultadosExatos
+        ) {
+
+            const resultado =
+                processarINaturalist(
+                    taxon
+                );
+
+            const filhosDiretos =
+                await obterFilhosDiretosINaturalist(
+                    taxon
+                );
+
+            resultadosHomonimos.push({
+
+                ...resultado,
+
+                filhosDiretos:
+                    filhosDiretos
+
+            });
+
+        }
 
         inaturalist = {
 
@@ -1276,9 +2280,8 @@ try {
             homonimos: true,
 
             resultados:
-                resultadosExatos.map(
-                    processarINaturalist
-                )
+                resultadosHomonimos
+
         };
 
     } else {
@@ -1305,217 +2308,6 @@ try {
     };
 }
 
-// =====================================================
-// NCBI TAXONOMY
-// =====================================================
-
-try {
-
-    const urlNCBISearch =
-        `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=taxonomy&term=${encodeURIComponent(nome)}&retmode=json`;
-
-    const respostaNCBISearch =
-        await fetch(urlNCBISearch);
-
-    const dadosNCBISearch =
-        await respostaNCBISearch.json();
-
-    const ids =
-        dadosNCBISearch.esearchresult?.idlist;
-
-    if (Array.isArray(ids) && ids.length > 0) {
-
-        const resultadosNCBI = [];
-
-        for (const taxid of ids) {
-
-            const urlNCBIFetch =
-                `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=taxonomy&id=${taxid}`;
-
-            const respostaNCBIFetch =
-                await fetch(urlNCBIFetch);
-
-            const textoNCBIFetch =
-                await respostaNCBIFetch.text();
-
-            const extrairTag =
-                (tag, conteudo) => {
-
-                    const regex =
-                        new RegExp(
-                            `<${tag}>([\\s\\S]*?)</${tag}>`
-                        );
-
-                    const resultado =
-                        conteudo.match(regex);
-
-                    return resultado
-                        ? resultado[1].trim()
-                        : null;
-                };
-
-            const taxidXML =
-                extrairTag(
-                    "TaxId",
-                    textoNCBIFetch
-                );
-
-            const nomeNCBI =
-                extrairTag(
-                    "ScientificName",
-                    textoNCBIFetch
-                );
-
-            const rankNCBI =
-                extrairTag(
-                    "Rank",
-                    textoNCBIFetch
-                );
-
-            const autoridade =
-                extrairTag(
-                    "DispName",
-                    textoNCBIFetch
-                );
-
-            const lineageMatch =
-                textoNCBIFetch.match(
-                    /<LineageEx>([\s\S]*?)<\/LineageEx>/
-                );
-
-            const lineage =
-                lineageMatch
-                    ? lineageMatch[1]
-                    : "";
-
-            const encontrarRank =
-                (rank) => {
-
-                    const taxa =
-                        lineage.match(
-                            /<Taxon>[\s\S]*?<\/Taxon>/g
-                        );
-
-                    if (!taxa) {
-                        return null;
-                    }
-
-                    for (const taxon of taxa) {
-
-                        const nomeTaxon =
-                            taxon.match(
-                                /<ScientificName>([\s\S]*?)<\/ScientificName>/
-                            );
-
-                        const rankTaxon =
-                            taxon.match(
-                                /<Rank>([\s\S]*?)<\/Rank>/
-                            );
-
-                        if (
-                            nomeTaxon &&
-                            rankTaxon &&
-                            rankTaxon[1].trim() === rank
-                        ) {
-                            return nomeTaxon[1].trim();
-                        }
-                    }
-
-                    return null;
-                };
-
-            if (taxidXML && nomeNCBI) {
-
-                resultadosNCBI.push({
-
-                    taxid:
-                        taxidXML,
-
-                    nome:
-                        nomeNCBI,
-
-                    autoria:
-                        autoridade,
-
-                    rank:
-                        rankNCBI,
-
-                    reino:
-                        rankNCBI === "kingdom"
-                            ? nomeNCBI
-                            : encontrarRank("kingdom"),
-
-                    filo:
-                        rankNCBI === "phylum"
-                            ? nomeNCBI
-                            : encontrarRank("phylum"),
-
-                    classe:
-                        rankNCBI === "class"
-                            ? nomeNCBI
-                            : encontrarRank("class"),
-
-                    ordem:
-                        rankNCBI === "order"
-                            ? nomeNCBI
-                            : encontrarRank("order"),
-
-                    familia:
-                        rankNCBI === "family"
-                            ? nomeNCBI
-                            : encontrarRank("family"),
-
-                    genero:
-                        rankNCBI === "genus"
-                            ? nomeNCBI
-                            : encontrarRank("genus")
-                });
-            }
-        }
-
-        if (resultadosNCBI.length === 1) {
-
-            ncbi = {
-                encontrado: true,
-                ...resultadosNCBI[0]
-            };
-
-        } else if (resultadosNCBI.length > 1) {
-
-            ncbi = {
-                encontrado: true,
-                homonimos: true,
-                resultados: resultadosNCBI
-            };
-
-        } else {
-
-            ncbi = {
-                encontrado: false
-            };
-        }
-
-    } else {
-
-        ncbi = {
-            encontrado: false
-        };
-    }
-
-} catch (erroNCBI) {
-
-    console.error(
-        "Erro ao consultar NCBI Taxonomy:",
-        erroNCBI
-    );
-
-    ncbi = {
-        encontrado: false,
-        erro:
-            "Não foi possível consultar o NCBI Taxonomy."
-    };
-}
-
         // =====================================================
     // RESPOSTA FINAL
     // =====================================================
@@ -1536,9 +2328,6 @@ res.json({
 
     inaturalist:
         inaturalist,
-
-    ncbi:
-        ncbi,
 
     wikipedia:
        wikipedia,

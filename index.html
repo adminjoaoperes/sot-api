@@ -954,7 +954,7 @@
             <div class="spinner"></div>
 
             <p>
-                Consultando as fontes científicas...
+                Aguarde! A consulta pode demorar alguns minutos...
             </p>
 
         </div>
@@ -1143,7 +1143,68 @@
 
         }
 
+function traduzirCategoriaTaxonomica(categoria) {
 
+    if (
+        categoria === null ||
+        categoria === undefined ||
+        categoria === ""
+    ) {
+        return "";
+    }
+
+    const categorias = {
+
+        kingdom: "Reino",
+
+        subkingdom: "Sub-reino",
+
+        phylum: "Filo",
+
+        subphylum: "Subfilo",
+
+        class: "Classe",
+
+        subclass: "Subclasse",
+
+	infraclass: "Infraclasse",
+
+	superorder: "Superordem",
+
+        order: "Ordem",
+
+        suborder: "Subordem",
+
+	infraorder: "Infraordem",
+
+	superfamily: "Superfamília",
+
+        family: "Família",
+
+	section: "Seção",
+
+        subfamily: "Subfamília",
+
+	tribe: "Tribo",
+
+        genus: "Gênero",
+
+        subgenus: "Subgênero",
+
+        species: "Espécie",
+
+        subspecies: "Subespécie",
+
+        variety: "Variedade",
+
+        form: "Forma"
+
+    };
+
+    return categorias[categoria.toLowerCase()]
+        || categoria;
+
+}
         function statusTexto(tipo, status) {
 
             if (tipo === "sinonimo") {
@@ -1343,9 +1404,42 @@
                         : ""
                     }
 
-                    ${renderClassificacao(item)}
+${renderClassificacao(item)}
 
-                </article>
+${
+    item.filhosDiretos &&
+    item.filhosDiretos.encontrado &&
+    item.filhosDiretos.resultados
+    ? `
+        <div class="filhos-diretos">
+
+            <strong>Filogenia:</strong>
+
+            <ul>
+                ${item.filhosDiretos.resultados.map(
+                    filho => `
+                        <li>
+    ${
+        filho.categoria
+        ? `<strong>${escapar(
+            traduzirCategoriaTaxonomica(
+                filho.categoria
+            )
+        )}</strong> `
+        : ""
+    }
+    ${nomeItalico(filho.nome)}
+                        </li>
+                    `
+                ).join("")}
+            </ul>
+
+        </div>
+    `
+    : ""
+}
+
+</article>
 
             `;
 
@@ -1457,9 +1551,42 @@
 
                     ${habitat}
 
-                    ${renderClassificacao(item)}
+${renderClassificacao(item)}
 
-                </article>
+${
+    item.filhosDiretos &&
+    item.filhosDiretos.encontrado &&
+    item.filhosDiretos.resultados
+    ? `
+        <div class="filhos-diretos">
+
+            <strong>Filogenia:</strong>
+
+            <ul>
+                ${item.filhosDiretos.resultados.map(
+                    filho => `
+<li>
+    ${
+        filho.categoria
+        ? `<strong>${escapar(
+            traduzirCategoriaTaxonomica(
+                filho.categoria
+            )
+        )}</strong> `
+        : ""
+    }
+    ${nomeItalico(filho.nome)}
+</li>
+                    `
+                ).join("")}
+            </ul>
+
+        </div>
+    `
+    : ""
+}
+
+</article>
 
             `;
 
@@ -1546,6 +1673,39 @@
                         : ""
                     }
 
+                    ${
+                        item.filhosDiretos &&
+                        item.filhosDiretos.encontrado &&
+                        item.filhosDiretos.resultados
+                        ? `
+                            <div class="filhos-diretos">
+
+                                <strong>Filogenia:</strong>
+
+                                <ul>
+                                    ${item.filhosDiretos.resultados.map(
+                                        filho => `
+<li>
+    ${
+        filho.categoria
+        ? `<strong>${escapar(
+            traduzirCategoriaTaxonomica(
+                filho.categoria
+            )
+        )}</strong> `
+        : ""
+    }
+    ${nomeItalico(filho.nome)}
+</li>
+                                        `
+                                    ).join("")}
+                                </ul>
+
+                            </div>
+                        `
+                        : ""
+                    }
+
                 </article>
 
             `;
@@ -1605,57 +1765,38 @@
                         : ""
                     }
 
-                </article>
+                    ${
+                        item.filhosDiretos &&
+                        item.filhosDiretos.encontrado &&
+                        item.filhosDiretos.resultados
+                        ? `
+                            <div class="filhos-diretos">
 
-            `;
+                                <strong>Filogenia:</strong>
 
-        }
+                                <ul>
+                                    ${item.filhosDiretos.resultados.map(
+                                        filho => `
+<li>
+    ${
+        filho.categoria
+        ? `<strong>${escapar(
+            traduzirCategoriaTaxonomica(
+                filho.categoria
+            )
+        )}</strong> `
+        : ""
+    }
+    ${nomeItalico(filho.nome)}
+</li>
+                                        `
+                                    ).join("")}
+                                </ul>
 
-
-        /* =====================================================
-           CARD NCBI
-        ===================================================== */
-
-        function renderNCBI(item) {
-
-            if (!item) {
-                return cardNaoEncontrado(
-                    "NCBI Taxonomy"
-                );
-            }
-
-            if (item.homonimos) {
-                return renderHomonimos(
-                    "NCBI Taxonomy",
-                    item.resultados || []
-                );
-            }
-
-            return `
-
-                <article class="fonte-card">
-
-                    ${cabecalhoFonte(
-                        "🧪",
-                        "NCBI Taxonomy",
-                        "National Center for Biotechnology Information",
-                        "Encontrado",
-                        "status-ok"
-                    )}
-
-                    <div class="dados">
-
-                        ${dado("Nome", item.nome)}
-
-                        ${dado("Nome científico", item.nomeCientifico)}
-
-                        ${dado("Rank", item.rank)}
-
-                        ${dado("TaxID", item.taxid)}
-
-                    </div>
-
-                    ${renderClassificacao(item)}
+                            </div>
+                        `
+                        : ""
+                    }
 
                 </article>
 
@@ -2179,7 +2320,6 @@
                 dados.worms,
                 dados.eschmeyer,
                 dados.inaturalist,
-                dados.ncbi
             ];
 
             for (const fonte of fontesPrincipais) {
@@ -2316,10 +2456,6 @@
 
                 ${renderINaturalist(
                     dados.inaturalist
-                )}
-
-                ${renderNCBI(
-                    dados.ncbi
                 )}
 
             `;
