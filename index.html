@@ -49,6 +49,9 @@
             --erro: #a33b3b;
             --erro-fundo: #fff0f0;
 
+            --extinto: #8b3f3f;
+            --extinto-fundo: #fbeaea;
+
             --sombra:
                 0 8px 30px rgba(24, 55, 42, 0.08);
 
@@ -333,6 +336,42 @@
 
 
         /* =====================================================
+           STATUS
+        ===================================================== */
+
+        .status {
+            border-radius: 100px;
+            padding: 5px 9px;
+
+            font-size: 10px;
+            font-weight: 800;
+
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-ok {
+            background: var(--sucesso-fundo);
+            color: var(--sucesso);
+        }
+
+        .status-sinonimo {
+            background: var(--alerta-fundo);
+            color: var(--alerta);
+        }
+
+        .status-nao {
+            background: #f0f2f1;
+            color: #68736e;
+        }
+
+        .status-extinto {
+            background: var(--extinto-fundo);
+            color: var(--extinto);
+        }
+
+
+        /* =====================================================
            SEÇÕES
         ===================================================== */
 
@@ -426,37 +465,6 @@
 
 
         /* =====================================================
-           STATUS
-        ===================================================== */
-
-        .status {
-            border-radius: 100px;
-            padding: 5px 9px;
-
-            font-size: 10px;
-            font-weight: 800;
-
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .status-ok {
-            background: var(--sucesso-fundo);
-            color: var(--sucesso);
-        }
-
-        .status-sinonimo {
-            background: var(--alerta-fundo);
-            color: var(--alerta);
-        }
-
-        .status-nao {
-            background: #f0f2f1;
-            color: #68736e;
-        }
-
-
-        /* =====================================================
            DADOS
         ===================================================== */
 
@@ -492,6 +500,33 @@
             font-weight: 600;
 
             word-break: break-word;
+        }
+
+
+        /* =====================================================
+           EXTINÇÃO
+        ===================================================== */
+
+        .extincao {
+            margin-top: 16px;
+
+            border-radius: 12px;
+            padding: 12px 14px;
+
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .extincao.extinto {
+            background: var(--extinto-fundo);
+            border: 1px solid #edcaca;
+            color: var(--extinto);
+        }
+
+        .extincao.vivente {
+            background: var(--sucesso-fundo);
+            border: 1px solid #cce7d5;
+            color: var(--sucesso);
         }
 
 
@@ -555,6 +590,100 @@
 
         .classificacao-item span {
             color: var(--texto-secundario);
+        }
+
+
+        /* =====================================================
+           FILHOS DIRETOS
+        ===================================================== */
+
+        .filhos-diretos {
+            margin-top: 17px;
+
+            background: #f8faf9;
+            border: 1px solid var(--borda);
+
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        .filhos-titulo {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: var(--verde);
+            margin-bottom: 10px;
+        }
+
+        .filhos-lista {
+            list-style: none;
+
+            display: grid;
+            gap: 7px;
+        }
+
+        .filho-item {
+            background: white;
+            border: 1px solid var(--borda);
+            border-radius: 9px;
+
+            padding: 9px 11px;
+
+            font-size: 12px;
+        }
+
+        .filho-principal {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .filho-nome {
+            font-family:
+                Georgia,
+                "Times New Roman",
+                serif;
+
+            font-style: italic;
+            font-weight: 700;
+        }
+
+        .filho-categoria {
+            color: var(--texto-secundario);
+            font-family:
+                Inter,
+                system-ui,
+                sans-serif;
+            font-style: normal;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-right: 5px;
+        }
+
+        .filho-extincao {
+            display: inline-flex;
+            align-items: center;
+
+            flex-shrink: 0;
+
+            border-radius: 100px;
+            padding: 3px 7px;
+
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .filho-extincao.extinto {
+            background: var(--extinto-fundo);
+            color: var(--extinto);
+        }
+
+        .filho-extincao.vivente {
+            background: var(--sucesso-fundo);
+            color: var(--sucesso);
         }
 
 
@@ -724,19 +853,29 @@
         }
 
         .homonimo-item {
-            padding: 12px;
+            padding: 16px;
 
             background: white;
             border: 1px solid var(--borda);
-            border-radius: 10px;
+            border-radius: 12px;
 
-            margin-top: 8px;
+            margin-top: 10px;
         }
 
         .homonimo-nome {
             font-family: Georgia, serif;
             font-style: italic;
             font-weight: 700;
+            font-size: 18px;
+            color: var(--verde-escuro);
+        }
+
+        .homonimo-cabecalho {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 13px;
         }
 
 
@@ -846,6 +985,12 @@
 
             .dados {
                 grid-template-columns: 1fr;
+            }
+
+            .filho-principal,
+            .homonimo-cabecalho {
+                align-items: flex-start;
+                flex-direction: column;
             }
 
         }
@@ -964,8 +1109,6 @@
 
 
         <section id="resultado">
-
-            <!-- CABEÇALHO DO TÁXON -->
 
             <div
                 id="taxonCabecalho"
@@ -1143,68 +1286,61 @@
 
         }
 
-function traduzirCategoriaTaxonomica(categoria) {
 
-    if (
-        categoria === null ||
-        categoria === undefined ||
-        categoria === ""
-    ) {
-        return "";
-    }
+        function traduzirCategoriaTaxonomica(categoria) {
 
-    const categorias = {
+            if (
+                categoria === null ||
+                categoria === undefined ||
+                categoria === ""
+            ) {
+                return "";
+            }
 
-        kingdom: "Reino",
+            const categorias = {
 
-        subkingdom: "Sub-reino",
+                kingdom: "Reino",
+                subkingdom: "Sub-reino",
 
-        phylum: "Filo",
+                phylum: "Filo",
+                subphylum: "Subfilo",
 
-        subphylum: "Subfilo",
+                class: "Classe",
+                subclass: "Subclasse",
+                infraclass: "Infraclasse",
 
-        class: "Classe",
+                superorder: "Superordem",
 
-        subclass: "Subclasse",
+                order: "Ordem",
+                suborder: "Subordem",
+                infraorder: "Infraordem",
 
-	infraclass: "Infraclasse",
+                superfamily: "Superfamília",
 
-	superorder: "Superordem",
+                family: "Família",
+                section: "Seção",
 
-        order: "Ordem",
+                subfamily: "Subfamília",
 
-        suborder: "Subordem",
+                tribe: "Tribo",
 
-	infraorder: "Infraordem",
+                genus: "Gênero",
+                subgenus: "Subgênero",
 
-	superfamily: "Superfamília",
+                species: "Espécie",
+                subspecies: "Subespécie",
 
-        family: "Família",
+                variety: "Variedade",
+                form: "Forma"
 
-	section: "Seção",
+            };
 
-        subfamily: "Subfamília",
+            return categorias[categoria.toLowerCase()]
+                || categoria;
 
-	tribe: "Tribo",
+        }
 
-        genus: "Gênero",
 
-        subgenus: "Subgênero",
-
-        species: "Espécie",
-
-        subspecies: "Subespécie",
-
-        variety: "Variedade",
-
-        form: "Forma"
-
-    };
-
-    return categorias[categoria.toLowerCase()]
-        || categoria;
-
-}
         function statusTexto(tipo, status) {
 
             if (tipo === "sinonimo") {
@@ -1248,17 +1384,14 @@ function traduzirCategoriaTaxonomica(categoria) {
                 return "";
             }
 
-            const urlEscapada =
-                escapar(url);
-
             return `
                 <a
                     class="link-fonte"
-                    href="${urlEscapada}"
+                    href="${escapar(url)}"
                     target="_blank"
                     rel="noopener noreferrer"
                 >
-                    ${texto || "Abrir fonte"} ↗
+                    ${escapar(texto || "Abrir fonte")} ↗
                 </a>
             `;
 
@@ -1280,6 +1413,64 @@ function traduzirCategoriaTaxonomica(categoria) {
 
                 </div>
             `;
+
+        }
+
+
+        /* =====================================================
+           EXTINÇÃO
+        ===================================================== */
+
+        function renderExtincao(valor) {
+
+            if (valor === true) {
+
+                return `
+                    <div class="extincao extinto">
+                        † Táxon identificado como extinto pelo iNaturalist
+                    </div>
+                `;
+
+            }
+
+            if (valor === false) {
+
+                return `
+                    <div class="extincao vivente">
+                        ✓ Táxon identificado como vivente pelo iNaturalist
+                    </div>
+                `;
+
+            }
+
+            return "";
+
+        }
+
+
+        function renderExtincaoFilho(valor) {
+
+            if (valor === true) {
+
+                return `
+                    <span class="filho-extincao extinto">
+                        Extinto
+                    </span>
+                `;
+
+            }
+
+            if (valor === false) {
+
+                return `
+                    <span class="filho-extincao vivente">
+                        Vivente
+                    </span>
+                `;
+
+            }
+
+            return "";
 
         }
 
@@ -1344,22 +1535,118 @@ function traduzirCategoriaTaxonomica(categoria) {
 
 
         /* =====================================================
+           FILHOS DIRETOS
+        ===================================================== */
+
+        function renderFilhosDiretos(filhos) {
+
+            if (
+                !filhos ||
+                filhos.encontrado !== true ||
+                !Array.isArray(filhos.resultados) ||
+                !filhos.resultados.length
+            ) {
+                return "";
+            }
+
+            return `
+
+                <div class="filhos-diretos">
+
+                    <div class="filhos-titulo">
+                        Filogenia
+                        · ${filhos.total || filhos.resultados.length}
+                    </div>
+
+                    <ul class="filhos-lista">
+
+                        ${
+                            filhos.resultados.map(filho => `
+
+                                <li class="filho-item">
+
+                                    <div class="filho-principal">
+
+                                        <div>
+
+                                            ${
+                                                filho.categoria
+                                                ? `
+                                                    <span class="filho-categoria">
+                                                        ${escapar(
+                                                            traduzirCategoriaTaxonomica(
+                                                                filho.categoria
+                                                            )
+                                                        )}
+                                                    </span>
+                                                `
+                                                : ""
+                                            }
+
+                                            <span class="filho-nome">
+                                                ${escapar(
+                                                    filho.nome || "Nome indisponível"
+                                                )}
+                                            </span>
+
+                                        </div>
+
+                                        ${renderExtincaoFilho(
+                                            filho.extinto
+                                        )}
+
+                                    </div>
+
+                                    ${
+                                        filho.nomeComum
+                                        ? `
+                                            <div
+                                                style="
+                                                    margin-top:5px;
+                                                    color:var(--texto-secundario);
+                                                    font-size:11px;
+                                                "
+                                            >
+                                                ${escapar(
+                                                    filho.nomeComum
+                                                )}
+                                            </div>
+                                        `
+                                        : ""
+                                    }
+
+                                </li>
+
+                            `).join("")
+                        }
+
+                    </ul>
+
+                </div>
+
+            `;
+
+        }
+
+
+        /* =====================================================
            CARD CHECKLISTBANK
         ===================================================== */
 
         function renderChecklistBank(item) {
 
             if (!item) {
-                return `
-                    ${cardNaoEncontrado("ChecklistBank")}
-                `;
+                return cardNaoEncontrado("ChecklistBank");
             }
 
             if (item.homonimos) {
+
                 return renderHomonimos(
                     "ChecklistBank",
-                    item.resultados || []
+                    item.resultados || [],
+                    "🧬"
                 );
+
             }
 
             const classe =
@@ -1404,42 +1691,13 @@ function traduzirCategoriaTaxonomica(categoria) {
                         : ""
                     }
 
-${renderClassificacao(item)}
+                    ${renderClassificacao(item)}
 
-${
-    item.filhosDiretos &&
-    item.filhosDiretos.encontrado &&
-    item.filhosDiretos.resultados
-    ? `
-        <div class="filhos-diretos">
+                    ${renderFilhosDiretos(
+                        item.filhosDiretos
+                    )}
 
-            <strong>Filogenia:</strong>
-
-            <ul>
-                ${item.filhosDiretos.resultados.map(
-                    filho => `
-                        <li>
-    ${
-        filho.categoria
-        ? `<strong>${escapar(
-            traduzirCategoriaTaxonomica(
-                filho.categoria
-            )
-        )}</strong> `
-        : ""
-    }
-    ${nomeItalico(filho.nome)}
-                        </li>
-                    `
-                ).join("")}
-            </ul>
-
-        </div>
-    `
-    : ""
-}
-
-</article>
+                </article>
 
             `;
 
@@ -1457,10 +1715,13 @@ ${
             }
 
             if (item.homonimos) {
+
                 return renderHomonimos(
                     "WoRMS",
-                    item.resultados || []
+                    item.resultados || [],
+                    "🌊"
                 );
+
             }
 
             const classe =
@@ -1551,42 +1812,13 @@ ${
 
                     ${habitat}
 
-${renderClassificacao(item)}
+                    ${renderClassificacao(item)}
 
-${
-    item.filhosDiretos &&
-    item.filhosDiretos.encontrado &&
-    item.filhosDiretos.resultados
-    ? `
-        <div class="filhos-diretos">
+                    ${renderFilhosDiretos(
+                        item.filhosDiretos
+                    )}
 
-            <strong>Filogenia:</strong>
-
-            <ul>
-                ${item.filhosDiretos.resultados.map(
-                    filho => `
-<li>
-    ${
-        filho.categoria
-        ? `<strong>${escapar(
-            traduzirCategoriaTaxonomica(
-                filho.categoria
-            )
-        )}</strong> `
-        : ""
-    }
-    ${nomeItalico(filho.nome)}
-</li>
-                    `
-                ).join("")}
-            </ul>
-
-        </div>
-    `
-    : ""
-}
-
-</article>
+                </article>
 
             `;
 
@@ -1620,14 +1852,22 @@ ${
                         )}
 
                         <p class="descricao">
-                            ${
-                                valorOuTraco(item.motivo)
-                            }
+                            ${valorOuTraco(item.motivo)}
                         </p>
 
                     </article>
 
                 `;
+
+            }
+
+            if (item.homonimos) {
+
+                return renderHomonimos(
+                    "Eschmeyer's Catalog",
+                    item.resultados || [],
+                    "🐟"
+                );
 
             }
 
@@ -1673,38 +1913,9 @@ ${
                         : ""
                     }
 
-                    ${
-                        item.filhosDiretos &&
-                        item.filhosDiretos.encontrado &&
-                        item.filhosDiretos.resultados
-                        ? `
-                            <div class="filhos-diretos">
-
-                                <strong>Filogenia:</strong>
-
-                                <ul>
-                                    ${item.filhosDiretos.resultados.map(
-                                        filho => `
-<li>
-    ${
-        filho.categoria
-        ? `<strong>${escapar(
-            traduzirCategoriaTaxonomica(
-                filho.categoria
-            )
-        )}</strong> `
-        : ""
-    }
-    ${nomeItalico(filho.nome)}
-</li>
-                                        `
-                                    ).join("")}
-                                </ul>
-
-                            </div>
-                        `
-                        : ""
-                    }
+                    ${renderFilhosDiretos(
+                        item.filhosDiretos
+                    )}
 
                 </article>
 
@@ -1724,10 +1935,11 @@ ${
             }
 
             if (item.homonimos) {
-                return renderHomonimos(
-                    "iNaturalist",
+
+                return renderINaturalistHomonimos(
                     item.resultados || []
                 );
+
             }
 
             return `
@@ -1738,8 +1950,14 @@ ${
                         "🌿",
                         "iNaturalist",
                         "Biodiversidade e observações",
-                        "Encontrado",
-                        "status-ok"
+                        item.extinto === true
+                            ? "Extinto"
+                            : item.extinto === false
+                                ? "Vivente"
+                                : "Encontrado",
+                        item.extinto === true
+                            ? "status-extinto"
+                            : "status-ok"
                     )}
 
                     <div class="dados">
@@ -1748,13 +1966,13 @@ ${
 
                         ${dado("Nome comum", item.nomeComum)}
 
-                        ${dado("Rank", item.rank)}
+                        ${dado("Rank", traduzirCategoriaTaxonomica(item.rank))}
 
                         ${dado("Taxon ID", item.id)}
 
-                        ${dado("Observações", item.observacoes)}
-
                     </div>
+
+                    ${renderExtincao(item.extinto)}
 
                     ${
                         item.wikipedia
@@ -1765,38 +1983,148 @@ ${
                         : ""
                     }
 
-                    ${
-                        item.filhosDiretos &&
-                        item.filhosDiretos.encontrado &&
-                        item.filhosDiretos.resultados
-                        ? `
-                            <div class="filhos-diretos">
+                    ${renderFilhosDiretos(
+                        item.filhosDiretos
+                    )}
 
-                                <strong>Filogenia:</strong>
+                </article>
 
-                                <ul>
-                                    ${item.filhosDiretos.resultados.map(
-                                        filho => `
-<li>
-    ${
-        filho.categoria
-        ? `<strong>${escapar(
-            traduzirCategoriaTaxonomica(
-                filho.categoria
-            )
-        )}</strong> `
-        : ""
-    }
-    ${nomeItalico(filho.nome)}
-</li>
-                                        `
-                                    ).join("")}
-                                </ul>
+            `;
 
-                            </div>
-                        `
-                        : ""
-                    }
+        }
+
+
+        /* =====================================================
+           iNATURALIST — HOMÔNIMOS
+        ===================================================== */
+
+        function renderINaturalistHomonimos(resultados) {
+
+            if (!resultados.length) {
+                return cardNaoEncontrado("iNaturalist");
+            }
+
+            return `
+
+                <article class="fonte-card">
+
+                    ${cabecalhoFonte(
+                        "🌿",
+                        "iNaturalist",
+                        "Biodiversidade e observações",
+                        "Homônimos",
+                        "status-sinonimo"
+                    )}
+
+                    <div class="homonimos">
+
+                        <div class="homonimos-titulo">
+
+                            Foram encontrados
+                            ${resultados.length}
+                            resultados distintos
+
+                        </div>
+
+                        ${
+                            resultados.map(item => `
+
+                                <div class="homonimo-item">
+
+                                    <div class="homonimo-cabecalho">
+
+                                        <div>
+
+                                            <div class="homonimo-nome">
+                                                ${escapar(
+                                                    item.nome || ""
+                                                )}
+                                            </div>
+
+                                            ${
+                                                item.rank
+                                                ? `
+                                                    <div
+                                                        style="
+                                                            margin-top:4px;
+                                                            color:var(--texto-secundario);
+                                                            font-size:11px;
+                                                        "
+                                                    >
+                                                        ${escapar(
+                                                            traduzirCategoriaTaxonomica(
+                                                                item.rank
+                                                            )
+                                                        )}
+                                                    </div>
+                                                `
+                                                : ""
+                                            }
+
+                                        </div>
+
+                                        ${
+                                            item.extinto === true
+                                            ? `
+                                                <span class="status status-extinto">
+                                                    Extinto
+                                                </span>
+                                            `
+                                            : item.extinto === false
+                                                ? `
+                                                    <span class="status status-ok">
+                                                        Vivente
+                                                    </span>
+                                                `
+                                                : ""
+                                        }
+
+                                    </div>
+
+                                    <div class="dados">
+
+                                        ${dado(
+                                            "Nome comum",
+                                            item.nomeComum
+                                        )}
+
+                                        ${dado(
+                                            "Rank",
+                                            traduzirCategoriaTaxonomica(
+                                                item.rank
+                                            )
+                                        )}
+
+                                        ${dado(
+                                            "Taxon ID",
+                                            item.id
+                                        )}
+
+                                    </div>
+
+                                    ${renderExtincao(
+                                        item.extinto
+                                    )}
+
+                                    ${
+                                        item.wikipedia
+                                        ? linkFonteDireta(
+                                            item.wikipedia,
+                                            "Wikipedia"
+                                        )
+                                        : ""
+                                    }
+
+                                    ${renderFilhosDiretos(
+                                        item.filhosDiretos
+                                    )}
+
+                                </div>
+
+                            `).join("")
+                        }
+
+                    </div>
 
                 </article>
 
@@ -1879,10 +2207,14 @@ ${
 
 
         /* =====================================================
-           HOMÔNIMOS
+           HOMÔNIMOS — OUTRAS FONTES
         ===================================================== */
 
-        function renderHomonimos(nomeFonte, resultados) {
+        function renderHomonimos(
+            nomeFonte,
+            resultados,
+            icone = "🧬"
+        ) {
 
             if (!resultados.length) {
                 return cardNaoEncontrado(nomeFonte);
@@ -1893,7 +2225,7 @@ ${
                 <article class="fonte-card">
 
                     ${cabecalhoFonte(
-                        "🧬",
+                        icone,
                         nomeFonte,
                         "Múltiplos usos do nome",
                         "Homônimos",
@@ -1912,8 +2244,12 @@ ${
 
                                 <div class="homonimo-item">
 
-                                    <div class="homonimo-nome">
-                                        ${escapar(item.nome || "")}
+                                    <div class="homonimo-cabecalho">
+
+                                        <div class="homonimo-nome">
+                                            ${escapar(item.nome || "")}
+                                        </div>
+
                                     </div>
 
                                     <div class="dados">
@@ -1921,6 +2257,10 @@ ${
                                         ${dado(
                                             "Rank",
                                             item.rank
+                                            ? traduzirCategoriaTaxonomica(
+                                                item.rank
+                                            )
+                                            : null
                                         )}
 
                                         ${dado(
@@ -1946,18 +2286,25 @@ ${
                                         item.nomeAceito
                                         ? `
                                             <div class="sinonimo">
+
                                                 <strong>
                                                     Nome aceito:
                                                 </strong>
+
                                                 ${nomeItalico(
                                                     item.nomeAceito
                                                 )}
+
                                             </div>
                                         `
                                         : ""
                                     }
 
                                     ${renderClassificacao(item)}
+
+                                    ${renderFilhosDiretos(
+                                        item.filhosDiretos
+                                    )}
 
                                 </div>
 
@@ -2032,7 +2379,7 @@ ${
                         : ""
                     }
 
-                    ${linkFonterDireta(
+                    ${linkFonteDireta(
                         item.url,
                         "Abrir Wikipedia"
                     )}
@@ -2099,7 +2446,7 @@ ${
                             <p class="descricao">
                                 ${escapar(item.descricao)}
                             </p>
-                        `
+                            `
                         : `
                             <p class="descricao">
                                 A página taxonômica foi localizada.
@@ -2109,7 +2456,7 @@ ${
                         `
                     }
 
-                    ${linkFonterDireta(
+                    ${linkFonteDireta(
                         item.url,
                         "Abrir Wikispecies"
                     )}
@@ -2299,6 +2646,7 @@ ${
 
         }
 
+
         function linkFonteDireta(url, texto) {
             return linkFonterDireta(url, texto);
         }
@@ -2319,7 +2667,7 @@ ${
                 dados.checklistbank,
                 dados.worms,
                 dados.eschmeyer,
-                dados.inaturalist,
+                dados.inaturalist
             ];
 
             for (const fonte of fontesPrincipais) {
@@ -2369,7 +2717,9 @@ ${
                         rank
                         ? `
                             <span class="tag">
-                                ${escapar(rank)}
+                                ${escapar(
+                                    traduzirCategoriaTaxonomica(rank)
+                                )}
                             </span>
                         `
                         : ""
@@ -2427,7 +2777,8 @@ ${
         function renderResultado(dados) {
 
             const nome =
-                dados.consulta || campoBusca.value.trim();
+                dados.consulta ||
+                campoBusca.value.trim();
 
             inicio.style.display = "none";
             erro.style.display = "none";
@@ -2600,4 +2951,3 @@ ${
 
 </body>
 </html>
-```

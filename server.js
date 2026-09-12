@@ -318,6 +318,9 @@ try {
             const uso =
                 item.usage;
 
+    const extinto =
+        uso.labelHtml?.includes("†") || false;
+
             let nomeAceito = null;
 
             // -----------------------------------------
@@ -443,7 +446,10 @@ const registroAceito =
                     classificacao.familia || null,
 
                 genero:
-                    classificacao.genero || null
+                    classificacao.genero || null,
+
+		extinto:
+    			extinto
 
             };
 
@@ -508,22 +514,25 @@ for (let i = 0; i < usos.length; i++) {
 
             total: filhos.length,
 
-            resultados:
-                filhos.map(filho => ({
+resultados:
+    filhos.map(filho => ({
 
-                    id:
-                        filho.id || null,
+        id:
+            filho.id || null,
 
-                    nome:
-                        filho.name || null,
+        nome:
+            filho.name || null,
 
-                    categoria:
-                        filho.rank || null,
+        categoria:
+            filho.rank || null,
 
-                    autoria:
-                        filho.authorship || null
+        autoria:
+            filho.authorship || null,
 
-                }))
+        extinto:
+            filho.labelHtml?.includes("†") || false
+
+    }))
 
         };
 
@@ -922,6 +931,40 @@ try {
 
     }
 
+function detectarExtincao(texto) {
+
+    const textoNormalizado =
+        texto
+            .toLowerCase()
+            .replace(/\s+/g, " ")
+            .trim();
+
+    // Casos que NÃO significam extinção completa
+    if (
+        /\bextinct in the wild\b/i.test(textoNormalizado) ||
+        /\bextinct in many areas\b/i.test(textoNormalizado) ||
+        /\bpossibly extinct\b/i.test(textoNormalizado) ||
+        /\bprobably extinct\b/i.test(textoNormalizado) ||
+        /\bapparently extinct\b/i.test(textoNormalizado)
+    ) {
+        return false;
+    }
+
+    // Extinção completa explicitamente indicada pelo catálogo
+    if (
+        /\bbut extinct\b/i.test(textoNormalizado)
+    ) {
+        return true;
+    }
+
+    if (
+        /\[extinct\]/i.test(textoNormalizado)
+    ) {
+        return true;
+    }
+
+    return false;
+}
 
     function criarFilhosVazios() {
 
@@ -1007,6 +1050,8 @@ async function obterClassificacaoEschmeyer() {
         const texto =
             limparHtml(item);
 
+	const extinto =
+    		detectarExtincao(texto);
 
         // ---------------------------------------------
         // Identifica o rank
@@ -1064,18 +1109,21 @@ async function obterClassificacaoEschmeyer() {
             nomeMatch[1].trim();
 
 
-        resultados.push({
+resultados.push({
 
-            nome:
-                nomeTaxon,
+    nome:
+        nomeTaxon,
 
-            rank:
-                rank,
+    rank:
+        rank,
 
-            paiTaxon:
-                null
+    paiTaxon:
+        null,
 
-        });
+    extinto:
+        extinto
+
+});
 
     }
 
@@ -1187,6 +1235,8 @@ async function obterClassificacaoEschmeyer() {
             const texto =
                 limparHtml(registro);
 
+		const extinto =
+    			detectarExtincao(texto);
 
             /*
              * Somente gêneros válidos entram nos
@@ -1242,21 +1292,24 @@ async function obterClassificacaoEschmeyer() {
                     : null;
 
 
-            resultados.push({
+resultados.push({
 
-                id:
-                    id,
+    id:
+        id,
 
-                nome:
-                    nomeGenero,
+    nome:
+        nomeGenero,
 
-                categoria:
-                    "genus",
+    categoria:
+        "genus",
 
-                autoria:
-                    null
+    autoria:
+        null,
 
-            });
+    extinto:
+        extinto
+
+});
 
         }
 
@@ -1336,6 +1389,8 @@ async function obterClassificacaoEschmeyer() {
             const texto =
                 limparHtml(registro);
 
+const extinto =
+    detectarExtincao(texto);
 
             const statusMatch =
                 texto.match(
@@ -1429,13 +1484,16 @@ async function obterClassificacaoEschmeyer() {
                 autoria:
                     null,
 
-                familia:
-                    familia,
+familia:
+    familia,
 
-                habitat:
-                    habitat
+habitat:
+    habitat,
 
-            });
+extinto:
+    extinto
+
+});
 
         }
 
@@ -1532,6 +1590,8 @@ async function obterClassificacaoEschmeyer() {
             const texto =
                 limparHtml(registro);
 
+const extinto =
+    detectarExtincao(texto);
 
             const idMatch =
                 registro.match(
@@ -1617,10 +1677,13 @@ async function obterClassificacaoEschmeyer() {
                 familia:
                     familia,
 
-                habitat:
-                    habitat
+		habitat:
+    			habitat,
 
-            });
+		extinto:
+    			extinto
+
+});
 
         }
 
@@ -1693,13 +1756,16 @@ const ehSinonimo =
         		? nomeTaxonomicoAceito
         		: null,
 
-                familia:
-                    registroValido.familia,
+familia:
+    registroValido.familia,
 
-                habitat:
-                    registroValido.habitat
+habitat:
+    registroValido.habitat,
 
-            };
+extinto:
+    registroValido.extinto
+
+};
 
         }
 
@@ -1741,10 +1807,13 @@ const ehSinonimo =
                 familia:
                     registroSinonimo.familia,
 
-                habitat:
-                    registroSinonimo.habitat
+habitat:
+    registroSinonimo.habitat,
 
-            };
+extinto:
+    registroSinonimo.extinto
+
+};
 
         }
 
@@ -1817,24 +1886,27 @@ const ehSinonimo =
             filhos.length > 0
         ) {
 
-            filhosDiretos =
-                filhos.map(
-                    filho => ({
+filhosDiretos =
+    filhos.map(
+        filho => ({
 
-                        id:
-                            null,
+            id:
+                null,
 
-                        nome:
-                            filho.nome,
+            nome:
+                filho.nome,
 
-                        categoria:
-                            filho.rank,
+            categoria:
+                filho.rank,
 
-                        autoria:
-                            null
+            autoria:
+                null,
 
-                    })
-                );
+            extinto:
+                filho.extinto === true
+
+        })
+    );
 
         }
 
@@ -1860,26 +1932,48 @@ const ehSinonimo =
 
         }
 
+let extintoTaxon =
+    registroClassificacao.extinto === true;
 
-        eschmeyer = {
+if (
+    (
+        rank === "genus" ||
+        rank === "family" ||
+        rank === "subfamily"
+    ) &&
+    filhosDiretos.length > 0
+) {
 
-            encontrado: true,
+    extintoTaxon =
+        filhosDiretos.every(
+            filho =>
+                filho.extinto === true
+        );
 
-            tipo:
-                "valido",
+}
 
-            categoria:
-                rank,
+eschmeyer = {
 
-            nome:
-                registroClassificacao.nome,
+    encontrado: true,
 
-            filhosDiretos:
-                criarFilhos(
-                    filhosDiretos
-                )
+    tipo:
+        "valido",
 
-        };
+    categoria:
+        rank,
+
+    nome:
+        registroClassificacao.nome,
+
+extinto:
+    extintoTaxon,
+
+    filhosDiretos:
+        criarFilhos(
+            filhosDiretos
+        )
+
+};
 
 
     } else {
@@ -1904,6 +1998,13 @@ const ehSinonimo =
                 especiesGenero.length > 0
             ) {
 
+const extintoGenero =
+    especiesGenero.length > 0 &&
+    especiesGenero.every(
+        especie =>
+            especie.extinto === true
+    );
+
                 eschmeyer = {
 
                     encontrado: true,
@@ -1916,6 +2017,9 @@ const ehSinonimo =
 
                     nome:
                         nomePesquisado,
+
+extinto:
+    extintoGenero,
 
                     filhosDiretos:
                         criarFilhos(
@@ -2038,11 +2142,14 @@ try {
                 id:
                     taxon.id,
 
-                nome:
-                    taxon.name || null,
+nome:
+    taxon.name || null,
 
-                nomeComum:
-                    taxon.preferred_common_name || null,
+extinto:
+    taxon.extinct === true,
+
+nomeComum:
+    taxon.preferred_common_name || null,
 
                 rank:
                     taxon.rank || null,
@@ -2183,11 +2290,14 @@ const filhos =
                                 id:
                                     filho.id || null,
 
-                                nome:
-                                    filho.name || null,
+nome:
+    filho.name || null,
 
-                                categoria:
-                                    filho.rank || null,
+extinto:
+    filho.extinct === true,
+
+categoria:
+    filho.rank || null,
 
                                 nomeComum:
                                     filho.preferred_common_name ||
